@@ -1,8 +1,5 @@
-import Image from "next/image";
-import BerandaPage from "./dashboard/page";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return (
-  <div><BerandaPage/></div>
-  );
+  redirect("/login");
 }

@@ -1,12 +1,36 @@
 import "./globals.css";
 import { AuthProvider } from "./lib/AuthContext";
+import { getSession } from "@/lib/auth";
+import prisma from "@/lib/db";
 
 export const metadata = {
-  title: "ElearningJamil - Portal Siswa",
+  title: "ElearningJamil - Portal",
   description: "Platform eLearning",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const session = await getSession();
+  let user = null;
+
+  if (session) {
+    user = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      }
+    });
+
+    if (user) {
+      // Tambahkan avatar default jika tidak ada di DB
+      user.avatar = `https://ui-avatars.com/api/?name=${user.name || user.email}&background=random`;
+      // Map name ke nama agar Sidebar tidak pecah jika masih pakai 'nama'
+      user.nama = user.name || user.email;
+    }
+  }
+
   return (
     <html lang="id">
       <head>
@@ -18,7 +42,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <AuthProvider>
+        <AuthProvider initialUser={user} key={session?.id || 'guest'}>
           {children}
         </AuthProvider>
       </body>

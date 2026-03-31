@@ -1,40 +1,31 @@
 "use client";
-import { createContext, useContext, useState } from "react";
 
-// ------------------------------------------------------------
-// Ganti bagian ini dengan session dari NextAuth / Clerk / dll
-// saat sudah ada sistem autentikasi nyata.
-// ------------------------------------------------------------
-const MOCK_USER = {
-  siswa: {
-    nama: "Budi Santoso",
-    kelas: "Kelas X-A",
-    avatar: "https://i.pravatar.cc/32?img=12",
-    role: "siswa",
-  },
-  guru: {
-    nama: "Pak Hendra",
-    mapel: "Matematika",
-    avatar: "https://i.pravatar.cc/32?img=53",
-    role: "guru",
-  },
-  admin: {
-    nama: "Administrator",
-    role: "admin",
-    avatar: "https://i.pravatar.cc/32?img=32",
-  },
-};
+import { createContext, useContext, useState, useEffect } from "react";
+import { logoutAction } from "../actions/auth";
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  // Ubah "siswa" → "guru" → "admin" untuk preview tampilan
-  const [user, setUser] = useState(MOCK_USER.admin);
+export function AuthProvider({ children, initialUser }) {
+  // Gunakan initialUser dari server jika ada, jika tidak fallback ke null
+  const [user, setUser] = useState(initialUser || null);
 
-  const switchRole = (role) => setUser(MOCK_USER[role]);
+  // Sync state ketika initialUser dari server berubah (misal setelah login/logout)
+  useEffect(() => {
+    setUser(initialUser);
+  }, [initialUser]);
+
+  const switchRole = (role) => {
+    // Fungsi ini hanya untuk demo/testing role di client
+    setUser(prev => prev ? { ...prev, role: role.toUpperCase() } : null);
+  };
+  
+  const logout = async () => {
+    await logoutAction();
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, switchRole }}>
+    <AuthContext.Provider value={{ user, setUser, switchRole, logout }}>
       {children}
     </AuthContext.Provider>
   );

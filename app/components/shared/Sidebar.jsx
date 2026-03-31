@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, GraduationCap, X, ChevronDown } from "lucide-react";
+import { LogOut, GraduationCap, X, ChevronDown, Loader2 } from "lucide-react";
 import { useAuth } from "../../lib/AuthContext";
 import { navConfig } from "../../lib/navConfig";
+import { logoutAction } from "../../actions/auth";
 
 const roleMeta = {
   siswa: {
@@ -35,9 +36,21 @@ export default function Sidebar({ open, close }) {
   const { user } = useAuth();
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState({});
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const items = navConfig[user.role] ?? [];
-  const meta = roleMeta[user.role] || roleMeta.siswa;
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutAction();
+    } catch (error) {
+      console.error("Logout failed", error);
+      setIsLoggingOut(false);
+    }
+  };
+
+  const roleKey = user?.role?.toLowerCase() === "teacher" ? "guru" : user?.role?.toLowerCase() === "student" ? "siswa" : "admin";
+  const items = navConfig[roleKey] ?? [];
+  const meta = roleMeta[roleKey] || roleMeta.siswa;
 
   const isActive = (href) => {
     if (href === "/dashboard/admin" || href === "/dashboard/guru" || href === "/dashboard/siswa") {
@@ -187,27 +200,39 @@ export default function Sidebar({ open, close }) {
           </nav>
         </div>
 
-        {/* profile */}
-        <div className="px-3 pt-3 pb-[18px] border-t border-border">
-          <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[10px] bg-cream">
-            <img
-              src={user.avatar}
-              alt="foto"
-              className={`w-8 h-8 rounded-full border-2 ${meta.border}`}
-            />
+        {user && (
+          <div className="px-3 pt-3 pb-[18px] border-t border-border">
+            <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[10px] bg-cream">
+              <img
+                src={user.avatar}
+                alt="foto"
+                className={`w-8 h-8 rounded-full border-2 ${meta.border}`}
+              />
 
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-ink truncate">
-                {user.nama}
-              </p>
-              <p className="text-[11px] text-ink-3 truncate">
-                {user.role === "siswa" ? user.kelas : user.role === "guru" ? user.mapel : "Super Admin"}
-              </p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-ink truncate">
+                  {user.name || user.email}
+                </p>
+                <p className="text-[11px] text-ink-3 truncate">
+                  {user.role === "STUDENT" ? user.kelas || "Siswa" : user.role === "TEACHER" ? user.mapel || "Guru" : "Super Admin"}
+                </p>
+              </div>
+
+              <button 
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="p-1 px-1.5 hover:bg-white rounded-md transition-colors text-ink-3 hover:text-red-500 disabled:opacity-50"
+                title="Keluar"
+              >
+                {isLoggingOut ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <LogOut size={13} />
+                )}
+              </button>
             </div>
-
-            <LogOut size={13} className="text-ink-3" />
           </div>
-        </div>
+        )}
       </aside>
     </>
   );
