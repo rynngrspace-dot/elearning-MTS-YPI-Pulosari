@@ -4,9 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, GraduationCap, X, ChevronDown, Loader2 } from "lucide-react";
-import { useAuth } from "../../lib/AuthContext";
-import { navConfig } from "../../lib/navConfig";
-import { logoutAction } from "../../actions/auth";
+import { useAuth } from "@/app/lib/AuthContext";
+import { navConfig } from "@/app/lib/navConfig";
 
 const roleMeta = {
   siswa: {
@@ -41,14 +40,15 @@ export default function Sidebar({ open, close }) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await logoutAction();
+      await fetch("/api/auth", { method: "DELETE" });
+      window.location.href = "/login";
     } catch (error) {
-      console.error("Logout failed", error);
+      console.error("Logout failed:", error);
       setIsLoggingOut(false);
     }
   };
 
-  const roleKey = user?.role?.toLowerCase() === "teacher" ? "guru" : user?.role?.toLowerCase() === "student" ? "siswa" : "admin";
+  const roleKey = user?.role === "TEACHER" ? "guru" : user?.role === "STUDENT" ? "siswa" : "admin";
   const items = navConfig[roleKey] ?? [];
   const meta = roleMeta[roleKey] || roleMeta.siswa;
 
@@ -200,39 +200,48 @@ export default function Sidebar({ open, close }) {
           </nav>
         </div>
 
+        {/* Profil Section (Hidden if guest) */}
         {user && (
-          <div className="px-3 pt-3 pb-[18px] border-t border-border">
+          <div className="px-3 pt-3 pb-2 border-t border-border">
             <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[10px] bg-cream">
-              <img
-                src={user.avatar}
-                alt="foto"
-                className={`w-8 h-8 rounded-full border-2 ${meta.border}`}
-              />
+              <div className={`w-8 h-8 rounded-full border-2 ${meta.border} bg-white flex items-center justify-center overflow-hidden shrink-0`}>
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="foto" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-bold text-ink-3">
+                    {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                  </span>
+                )}
+              </div>
 
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-semibold text-ink truncate">
-                  {user.name || user.email}
+                  {user?.name || user?.email}
                 </p>
                 <p className="text-[11px] text-ink-3 truncate">
-                  {user.role === "STUDENT" ? user.kelas || "Siswa" : user.role === "TEACHER" ? user.mapel || "Guru" : "Super Admin"}
+                  {user?.role === "STUDENT" ? user?.kelas || "Siswa" : user?.role === "TEACHER" ? user?.mapel || "Guru" : "Administrator"}
                 </p>
               </div>
-
-              <button 
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="p-1 px-1.5 hover:bg-white rounded-md transition-colors text-ink-3 hover:text-red-500 disabled:opacity-50"
-                title="Keluar"
-              >
-                {isLoggingOut ? (
-                  <Loader2 size={13} className="animate-spin" />
-                ) : (
-                  <LogOut size={13} />
-                )}
-              </button>
             </div>
           </div>
         )}
+
+        {/* Global Logout/Back to Login Button */}
+        <div className="px-3 pb-[18px] mt-auto">
+          <button 
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center gap-2.5 p-2.5 px-3 hover:bg-red-50 rounded-lg transition-all text-ink-2 hover:text-red-600 group/logout disabled:opacity-50"
+            title="Keluar dari sistem"
+          >
+            {isLoggingOut ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <LogOut size={16} className="group-hover/logout:scale-110 transition-transform" />
+            )}
+            <span className="text-[13.5px] font-medium">{user ? "Keluar Sistem" : "Reset Sesi / Login"}</span>
+          </button>
+        </div>
       </aside>
     </>
   );

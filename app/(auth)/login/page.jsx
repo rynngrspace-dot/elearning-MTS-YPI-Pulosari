@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { User, Lock, ArrowRight, Library, CheckCircle2, Loader2 } from "lucide-react";
-import { loginAction } from "@/app/actions/auth";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,10 +15,27 @@ export default function LoginPage() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const result = await loginAction(formData);
+    const username = formData.get("username");
+    const password = formData.get("password");
 
-    if (result?.error) {
-      setError(result.error);
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error);
+        setLoading(false);
+      } else {
+        // Redirection on successful login
+        window.location.href = result.redirect;
+      }
+    } catch (error) {
+      setError(error.message);
       setLoading(false);
     }
   }
@@ -74,14 +90,14 @@ export default function LoginPage() {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div className="group/input relative">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1 group-focus-within/input:text-indigo-600 transition-colors">Email Address</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1 group-focus-within/input:text-indigo-600 transition-colors">Username / NISN</label>
                   <div className="relative">
                     <User size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-indigo-600 transition-colors" />
                     <input 
-                      name="email"
-                      type="email" 
+                      name="username"
+                      type="text" 
                       required
-                      placeholder="nama@elearning.com"
+                      placeholder="Email / NISN"
                       className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[13.5px] font-bold outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 focus:bg-white transition-all placeholder:font-medium placeholder:opacity-30 disabled:opacity-50"
                       disabled={loading}
                     />

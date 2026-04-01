@@ -1,51 +1,57 @@
 const { PrismaClient } = require("@prisma/client");
-const { PrismaPg } = require("@prisma/adapter-pg");
-const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+// Import Seeders
+const { seedAdmin } = require("./seeders/adminSeeder");
+const { seedTeachers } = require("./seeders/teacherSeeder");
+const { seedStudents } = require("./seeders/studentSeeder");
+const { seedTahunAjaran } = require("./seeders/tahunAjaranSeeder");
+const { seedMapel } = require("./seeders/mapelSeeder");
+const seedKelas = require("./seeders/kelasSeeder");
+
+const prisma = new PrismaClient();
 
 async function main() {
-  const adminPassword = await bcrypt.hash("admin123", 10);
-  const teacherPassword = await bcrypt.hash("teacher123", 10);
+  const args = process.argv.slice(2);
+  const runAll = args.length === 0;
 
-  console.log("Seeding started...");
+  console.log("🚀 Starting database seeding...");
+  
+  // 1. Mapel & Kelas (Foundation)
+  if (runAll || args.includes("--mapel")) {
+    await seedMapel(prisma);
+  }
 
-  // 1. Create Admin
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@test.com" },
-    update: {},
-    create: {
-      email: "admin@test.com",
-      password: adminPassword,
-      name: "Admin MTs Jamil",
-      role: "ADMIN",
-    },
-  });
+  if (runAll || args.includes("--kelas")) {
+    await seedKelas(prisma);
+  }
 
-  // 2. Create Teacher
-  const teacher = await prisma.user.upsert({
-    where: { email: "teacher@test.com" },
-    update: {},
-    create: {
-      email: "teacher@test.com",
-      password: teacherPassword,
-      name: "Guru Jamil",
-      role: "TEACHER",
-    },
-  });
+  // 2. Tahun Ajaran (Foundation)
+  if (runAll || args.includes("--tahun-ajaran")) {
+    await seedTahunAjaran(prisma);
+  }
 
-  console.log("Database seeded successfully!");
-  console.log("Admin: admin@test.com / admin123");
-  console.log("Teacher: teacher@test.com / teacher123");
+  // 3. Admin
+  if (runAll || args.includes("--admin")) {
+    await seedAdmin(prisma);
+  }
+  
+  // 4. Guru (Depends on Mapel & Kelas & TahunAjaran for Pengampu)
+  if (runAll || args.includes("--guru")) {
+    await seedTeachers(prisma);
+  }
+
+  // 5. Siswa (Depends on Kelas)
+  if (runAll || args.includes("--siswa")) {
+    await seedStudents(prisma);
+  }
+
+  console.log("✨ Database seeding process finished!");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Error during seeding:", e);
     process.exit(1);
   })
   .finally(async () => {

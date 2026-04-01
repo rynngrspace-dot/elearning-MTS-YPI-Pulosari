@@ -2,15 +2,16 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { Bell, Search, Menu } from "lucide-react";
-import { useAuth } from "../../lib/AuthContext";
-import { pageTitles } from "../../lib/navConfig";
+import { useAuth } from "@/app/lib/AuthContext";
+import { pageTitles } from "@/app/lib/navConfig";
 
 export default function Header({ toggleSidebar }) {
   const pathname = usePathname();
   const { user } = useAuth();
 
   const title = pageTitles[pathname] ?? "Dashboard";
-  const accent = user.role === "guru" ? "#6366F1" : "#0EA5A0";
+  const isTeacher = user?.role?.toLowerCase() === "teacher" || user?.role?.toLowerCase() === "guru";
+  const accent = isTeacher ? "#6366F1" : "#0EA5A0";
 
   const hari = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
@@ -51,7 +52,7 @@ export default function Header({ toggleSidebar }) {
           <input
             type="text"
             placeholder={
-              user.role === "guru"
+              isTeacher
                 ? "Cari siswa, materi..."
                 : "Cari materi, tugas..."
             }
@@ -70,11 +71,15 @@ export default function Header({ toggleSidebar }) {
         </button>
 
         {/* avatar */}
-        <img
-          src={user.avatar}
-          alt="avatar"
-          className="w-8 h-8 rounded-full border-2 border-zinc-200 cursor-pointer"
-        />
+        <div className="w-8 h-8 rounded-full border-2 border-zinc-200 cursor-pointer bg-zinc-100 flex items-center justify-center overflow-hidden">
+          {user?.avatar ? (
+            <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[10px] font-bold text-zinc-400">
+              {user?.name?.charAt(0) || "U"}
+            </span>
+          )}
+        </div>
       </div>
     </header>
   );

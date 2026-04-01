@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { logoutAction } from "../actions/auth";
 
 const AuthContext = createContext(null);
 
@@ -20,7 +19,7 @@ export function AuthProvider({ children, initialUser }) {
   };
   
   const logout = async () => {
-    await logoutAction();
+    await fetch("/api/auth", { method: "DELETE" });
     setUser(null);
   };
 

@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -16,11 +17,123 @@ enum Role {
 }
 
 model User {
+  id             String          @id @default(cuid())
+  username       String          @unique // Email for Admin/Guru, NISN for Siswa
+  password       String
+  name           String?
+  role           Role            @default(STUDENT)
+  studentProfile Student?
+  teacherProfile Teacher?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Student {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nisn         String   @unique
+  nis          String?
+  nik          String?
+  gender       String?  // "L" or "P"
+  tempatLahir  String?
+  tanggalLahir String?
+  alamat       String?
+  namaAyah     String?
+  namaIbu      String?
+  noHpOrangTua String?
+  asalSD       String?
+  tahunMasuk   String?
+  status       String   @default("Aktif") // "Aktif" or "Non-Aktif"
+  
+  kelasId      String?
+  kelas        Kelas?   @relation(fields: [kelasId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Teacher {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nip          String?  @unique
+  nik          String?
+  gender       String?
+  tempatLahir  String?
+  tanggalLahir String?
+  alamat       String?
+  noHp         String?
+  pendidikan   String?
+  status       String   @default("PNS") // "PNS", "GTT", "Honor"
+
+  mapelId      String?
+  mataPelajaran MataPelajaran? @relation(fields: [mapelId], references: [id])
+
+  pengampu     Pengampu[]     @relation("TeacherPengampu")
+  waliKelasDi  Kelas[]        @relation("WaliKelas")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model MataPelajaran {
   id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(STUDENT)
+  nama      String   @unique
+  kode      String?  @unique
+  kelompok  String?  // e.g. "Kelompok A (Umum)"
+  teachers  Teacher[]
+  pengampu  Pengampu[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Kelas {
+  id          String     @id @default(cuid())
+  nama        String     @unique
+  tingkat     String?    // "X", "XI", "XII"
+  
+  waliKelasId String?
+  waliKelas   Teacher?   @relation("WaliKelas", fields: [waliKelasId], references: [id])
+
+  students    Student[]
+  pengampu    Pengampu[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Pengampu {
+  id            String         @id @default(cuid())
+  
+  teacherId     String
+  teacher       Teacher        @relation("TeacherPengampu", fields: [teacherId], references: [id])
+  
+  mapelId       String
+  mapel         MataPelajaran  @relation(fields: [mapelId], references: [id])
+  
+  kelasId       String
+  kelas         Kelas          @relation(fields: [kelasId], references: [id])
+  
+  tahunAjaranId String
+  tahunAjaran   TahunAjaran    @relation(fields: [tahunAjaranId], references: [id])
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([teacherId, mapelId, kelasId, tahunAjaranId])
+}
+
+model TahunAjaran {
+  id        String   @id @default(cuid())
+  tahun     String   // e.g., "2023/2024"
+  semester  String   // e.g., "Ganjil" or "Genap"
+  isActive  Boolean  @default(false)
+  
+  pengampu  Pengampu[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tahun, semester])
 }
