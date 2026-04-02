@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { LogOut, GraduationCap, X, ChevronDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { navConfig } from "@/app/lib/navConfig";
+import { getStudentMapelsAction } from "@/lib/actions/pengampu-actions";
+import { useEffect } from "react";
 
 const roleMeta = {
   siswa: {
@@ -36,6 +38,39 @@ export default function Sidebar({ open, close }) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [dynamicMapels, setDynamicMapels] = useState([]);
+
+  // Mockup fallback data for Students
+  const mockupMapels = [
+    { label: "Bahasa Indonesia", href: "/dashboard/siswa/mapel/bahasa-indonesia" },
+    { label: "Seni Budaya", href: "/dashboard/siswa/mapel/seni-budaya" },
+    { label: "Bahasa Inggris", href: "/dashboard/siswa/mapel/bahasa-inggris" },
+    { label: "Prakarya", href: "/dashboard/siswa/mapel/prakarya" },
+    { label: "Bahasa Arab", href: "/dashboard/siswa/mapel/bahasa-arab" },
+    { label: "Akidah Akhlak", href: "/dashboard/siswa/mapel/akidah-akhlak" },
+    { label: "Matematika", href: "/dashboard/siswa/mapel/matematika" },
+  ];
+
+  // Fetch subjects for students and handle Auto-Expand
+  useEffect(() => {
+    if (user?.role === "STUDENT") {
+      // Auto-expand Mata Pelajaran for students
+      setOpenMenus(prev => ({ ...prev, "Mata Pelajaran": true }));
+
+      if (user?.kelasId) {
+        const fetchMapels = async () => {
+          const res = await getStudentMapelsAction(user.kelasId);
+          if (res.success && res.data.length > 0) {
+            setDynamicMapels(res.data.map(item => ({
+              label: item.mapel.nama,
+              href: `/dashboard/siswa/mapel/${item.mapelId}`
+            })));
+          }
+        };
+        fetchMapels();
+      }
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -49,8 +84,20 @@ export default function Sidebar({ open, close }) {
   };
 
   const roleKey = user?.role === "TEACHER" ? "guru" : user?.role === "STUDENT" ? "siswa" : "admin";
-  const items = navConfig[roleKey] ?? [];
+  let items = navConfig[roleKey] ?? [];
   const meta = roleMeta[roleKey] || roleMeta.siswa;
+
+  // Inject dynamic mapels if student
+  if (roleKey === "siswa") {
+    items = items.map(item => {
+      if (item.label === "Mata Pelajaran") {
+        // Only replace if we have real dynamic data from DB
+        const subjectList = dynamicMapels.length > 0 ? dynamicMapels : item.children;
+        return { ...item, children: subjectList };
+      }
+      return item;
+    });
+  }
 
   const isActive = (href) => {
     if (href === "/dashboard/admin" || href === "/dashboard/guru" || href === "/dashboard/siswa") {

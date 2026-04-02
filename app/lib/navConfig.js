@@ -17,11 +17,20 @@ import {
 export const navConfig = {
   siswa: [
     { icon: LayoutDashboard, label: "Beranda",  href: "/dashboard/siswa" },
-    { icon: BookOpen,        label: "Materi",   href: "/dashboard/siswa/materi" },
-    { icon: ClipboardList,   label: "Tugas",    href: "/dashboard/siswa/tugas" },
-    { icon: BarChart2,       label: "Nilai",    href: "/dashboard/siswa/nilai" },
-    { icon: CalendarDays,    label: "Jadwal",   href: "/dashboard/siswa/jadwal" },
-    { icon: UserCheck,       label: "Absensi",  href: "/dashboard/siswa/absensi" },
+    { 
+      icon: BookMarked,      
+      label: "Mata Pelajaran",    
+      children: [
+        { label: "Bahasa Indonesia", href: "/dashboard/siswa/mapel/bahasa-indonesia" },
+        { label: "Bahasa Inggris",   href: "/dashboard/siswa/mapel/bahasa-inggris" },
+        { label: "Seni Budaya",      href: "/dashboard/siswa/mapel/seni-budaya" },
+        { label: "Prakarya",         href: "/dashboard/siswa/mapel/prakarya" },
+        { label: "Bahasa Arab",      href: "/dashboard/siswa/mapel/bahasa-arab" },
+        { label: "Akidah Akhlak",    href: "/dashboard/siswa/mapel/akidah-akhlak" },
+        { label: "Matematika",       href: "/dashboard/siswa/mapel/matematika" },
+      ]
+    },
+    { icon: UserCheck,       label: "Presensi",  href: "/dashboard/siswa/absensi" },
   ],
   guru: [
     { icon: LayoutDashboard, label: "Beranda",          href: "/dashboard/guru" },
@@ -59,7 +68,7 @@ export const pageTitles = {
   "/dashboard/siswa/tugas":      "Tugas",
   "/dashboard/siswa/nilai":      "Rekap Nilai",
   "/dashboard/siswa/jadwal":     "Jadwal Pelajaran",
-  "/dashboard/siswa/absensi":    "Riwayat Absensi",
+  "/dashboard/siswa/absensi":    "Rekap Presensi",
   // guru
   "/dashboard/guru/mapel":       "Mata Pelajaran Pengampu",
   "/dashboard/guru/jadwal":      "Jadwal Mengajar",

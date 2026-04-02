@@ -1,412 +1,249 @@
 "use client";
-import { useState } from "react";
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
+
+import { useMemo, useState, useEffect } from "react";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
+  FileText,
+  CalendarDays,
+  Loader2
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/app/lib/AuthContext";
+import { getStudentAttendanceAction } from "@/lib/actions/absensi-actions";
 
+// Status Configuration - Mapped to DB values
 const statusCfg = {
-  hadir: { label: "Hadir", icon: CheckCircle2, c: "#16A34A", bg: "#DCFCE7" },
-  sakit: { label: "Sakit", icon: AlertCircle, c: "#D97706", bg: "#FEF9C3" },
-  izin: { label: "Izin", icon: Clock, c: "#6366F1", bg: "#EEF2FF" },
-  alpha: { label: "Alpha", icon: XCircle, c: "#DC2626", bg: "#FEE2E2" },
-  terlambat: { label: "Terlambat", icon: Clock, c: "#EA580C", bg: "#FFEDD5" },
+  "hadir": { label: "H", c: "#16A34A", bg: "bg-green-100", border: "border-green-200" },
+  "sakit": { label: "S", c: "#D97706", bg: "bg-amber-100", border: "border-amber-200" },
+  "izin": { label: "I", c: "#6366F1", bg: "bg-indigo-100", border: "border-indigo-200" },
+  "alpha": { label: "A", c: "#DC2626", bg: "bg-red-100", border: "border-red-200" },
+  "terlambat": { label: "T", c: "#EA580C", bg: "bg-orange-100", border: "border-orange-200" },
 };
-
-const records = {
-  "2025-03-10": [
-    { jam: "07.00", mapel: "Matematika", status: "hadir" },
-    { jam: "08.30", mapel: "B. Indonesia", status: "hadir" },
-    { jam: "10.15", mapel: "Fisika", status: "hadir" },
-    { jam: "12.30", mapel: "B. Inggris", status: "sakit" },
-  ],
-  "2025-03-09": [
-    { jam: "07.00", mapel: "Matematika", status: "hadir" },
-    { jam: "08.30", mapel: "Kimia", status: "hadir" },
-    { jam: "10.15", mapel: "Sejarah", status: "terlambat" },
-  ],
-  "2025-03-08": [
-    { jam: "07.00", mapel: "Matematika", status: "hadir" },
-    { jam: "08.30", mapel: "B. Indonesia", status: "alpha" },
-    { jam: "10.15", mapel: "Fisika", status: "hadir" },
-  ],
-  "2025-03-07": [
-    { jam: "07.00", mapel: "B. Indonesia", status: "hadir" },
-    { jam: "08.30", mapel: "Fisika", status: "hadir" },
-  ],
-  "2025-03-06": [
-    { jam: "07.00", mapel: "Kimia", status: "hadir" },
-    { jam: "08.30", mapel: "Matematika", status: "hadir" },
-    { jam: "10.15", mapel: "Sejarah", status: "izin" },
-  ],
-  "2025-03-05": [
-    { jam: "07.00", mapel: "B. Indonesia", status: "hadir" },
-    { jam: "08.30", mapel: "Fisika", status: "hadir" },
-    { jam: "10.15", mapel: "Matematika", status: "hadir" },
-    { jam: "12.30", mapel: "B. Inggris", status: "hadir" },
-  ],
-  "2025-03-04": [
-    { jam: "07.00", mapel: "Kimia", status: "hadir" },
-    { jam: "08.30", mapel: "Sejarah", status: "hadir" },
-    { jam: "10.15", mapel: "Matematika", status: "hadir" },
-  ],
-  "2025-03-03": [
-    { jam: "07.00", mapel: "B. Indonesia", status: "hadir" },
-    { jam: "08.30", mapel: "Fisika", status: "terlambat" },
-  ],
-  "2025-02-28": [
-    { jam: "07.00", mapel: "Matematika", status: "hadir" },
-    { jam: "08.30", mapel: "B. Indonesia", status: "hadir" },
-    { jam: "10.15", mapel: "Fisika", status: "sakit" },
-  ],
-  "2025-02-27": [
-    { jam: "07.00", mapel: "Kimia", status: "hadir" },
-    { jam: "08.30", mapel: "Sejarah", status: "hadir" },
-    { jam: "10.15", mapel: "Matematika", status: "alpha" },
-  ],
-};
-
-const pad = (n) => String(n).padStart(2, "0");
-const makeKey = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
-
-const HARI_ID = [
-  "Minggu",
-  "Senin",
-  "Selasa",
-  "Rabu",
-  "Kamis",
-  "Jumat",
-  "Sabtu",
-];
 
 const BULAN_ID = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
 ];
 
-const DAYS_SHORT = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+export default function PresensiPage() {
+  const { user } = useAuth();
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [records, setRecords] = useState({});
+  const [loading, setLoading] = useState(true);
+  
+  const daysInMonth = useMemo(() => {
+    return new Date(currentYear, currentMonth + 1, 0).getDate();
+  }, [currentYear, currentMonth]);
 
-const labelFromKey = (k) => {
-  const [y, m, d] = k.split("-").map(Number);
-  const dow = new Date(y, m - 1, d).getDay();
-  return `${HARI_ID[dow]}, ${d} ${BULAN_ID[m - 1]} ${y}`;
-};
+  const daysArray = useMemo(() => {
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  }, [daysInMonth]);
 
-const priority = { alpha: 0, terlambat: 1, sakit: 2, izin: 3, hadir: 4 };
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      setLoading(true);
+      if (user?.id) {
+        const res = await getStudentAttendanceAction(user.id, currentMonth, currentYear);
+        if (res.success) {
+          // Transform raw DB records into grid format: { SubjectName: { Day: Status } }
+          const grouped = {};
+          res.data.forEach(item => {
+            const subject = item.mapel.nama;
+            
+            // AMBIL ANGKA TANGGAL LANGSUNG DARI UTC
+            // Karena kita simpan di jam 12:00 UTC (UTC Noon), 
+            // getUTCDate() pasti mengembalikan angka tanggal yang benar tanpa shift.
+            const day = new Date(item.tanggal).getUTCDate();
+            
+            if (!grouped[subject]) grouped[subject] = {};
+            grouped[subject][day] = item.status;
+          });
+          setRecords(grouped);
+        }
+      }
+      setLoading(false);
+    };
 
-const dayStatus = (k) => {
-  const list = records[k];
-  if (!list) return null;
-  return list.reduce(
-    (best, r) => (priority[r.status] < priority[best] ? r.status : best),
-    "hadir",
-  );
-};
+    if (user) {
+      fetchAttendance();
+    }
+  }, [user, currentMonth, currentYear]);
 
-export default function AbsensiPage() {
-  const TY = 2025,
-    TM = 2,
-    TD = 10;
-  const todayKey = makeKey(TY, TM, TD);
+  const prevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(y => y - 1);
+    } else {
+      setCurrentMonth(m => m - 1);
+    }
+  };
 
-  const [vy, setVy] = useState(TY);
-  const [vm, setVm] = useState(TM);
-  const [sel, setSel] = useState(null);
+  const nextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(y => y + 1);
+    } else {
+      setCurrentMonth(m => m + 1);
+    }
+  };
 
-  const prevMonth = () =>
-    vm === 0 ? (setVy((y) => y - 1), setVm(11)) : setVm((m) => m - 1);
-
-  const nextMonth = () =>
-    vm === 11 ? (setVy((y) => y + 1), setVm(0)) : setVm((m) => m + 1);
-
-  const firstDow = new Date(vy, vm, 1).getDay();
-  const daysInMonth = new Date(vy, vm + 1, 0).getDate();
-
-  const allSessions = Object.values(records).flat();
-  const hadirCount = allSessions.filter((r) => r.status === "hadir").length;
-  const pct = Math.round((hadirCount / allSessions.length) * 100);
-
-  const monthSessions = Array.from(
-    { length: daysInMonth },
-    (_, i) => records[makeKey(vy, vm, i + 1)] || [],
-  ).flat();
-
-  const monthHadir = monthSessions.filter((r) => r.status === "hadir").length;
-  const monthPct = monthSessions.length
-    ? Math.round((monthHadir / monthSessions.length) * 100)
-    : 0;
-
-  const selRecords = sel ? records[sel] : null;
+  const attendanceRate = useMemo(() => {
+    if (Object.keys(records).length === 0) return 0;
+    let total = 0;
+    let present = 0;
+    Object.values(records).forEach(subj => {
+      Object.values(subj).forEach(status => {
+        total++;
+        if (status === "Hadir" || status === "Terlambat") present++;
+      });
+    });
+    return total > 0 ? Math.round((present / total) * 100) : 0;
+  }, [records]);
 
   return (
-    <div className="p-8 flex flex-col gap-6 animate-[slideUp_.3s_ease]">
-      {/* header */}
-
-      <div>
-        <h1 className="text-xl font-bold text-zinc-900">Riwayat Absensi</h1>
-        <p className="text-xs text-zinc-400 mt-1">Semester Genap 2024/2025</p>
-      </div>
-
-      {/* stat cards */}
-
-      <div className="grid grid-cols-5 gap-3">
-        {[
-          {
-            label: "Hadir",
-            val: allSessions.filter((r) => r.status === "hadir").length,
-            ...statusCfg.hadir,
-          },
-          {
-            label: "Sakit",
-            val: allSessions.filter((r) => r.status === "sakit").length,
-            ...statusCfg.sakit,
-          },
-          {
-            label: "Terlambat",
-            val: allSessions.filter((r) => r.status === "terlambat").length,
-            ...statusCfg.terlambat,
-          },
-          {
-            label: "Alpha",
-            val: allSessions.filter((r) => r.status === "alpha").length,
-            ...statusCfg.alpha,
-          },
-          {
-            label: "Kehadiran",
-            val: `${pct}%`,
-            icon: CheckCircle2,
-            c: pct >= 80 ? "#16A34A" : "#DC2626",
-            bg: pct >= 80 ? "#DCFCE7" : "#FEE2E2",
-          },
-        ].map(({ label, val, icon: Icon, c, bg }) => (
-          <div
-            key={label}
-            className="bg-white border border-zinc-200 rounded-xl p-3 flex gap-3 items-center"
-          >
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ background: bg }}
-            >
-              <Icon size={15} style={{ color: c }} />
-            </div>
-
-            <div>
-              <p
-                className="font-bold text-lg leading-none"
-                style={{ color: c }}
-              >
-                {val}
-              </p>
-              <p className="text-xs text-zinc-400">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* main layout */}
-
-      <div className="grid grid-cols-[260px_1fr] gap-4">
-        {/* calendar */}
-
-        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
-          <div className="flex justify-between items-center mb-2">
-            <button
-              onClick={prevMonth}
-              className="border border-zinc-300 rounded-md w-6 h-6 flex items-center justify-center cursor-pointer"
-            >
-              <ChevronLeft size={12} />
-            </button>
-
-            <p className="font-bold text-sm">
-              {BULAN_ID[vm]} {vy}
-            </p>
-
-            <button
-              onClick={nextMonth}
-              className="border border-zinc-300 rounded-md w-6 h-6 flex items-center justify-center cursor-pointer"
-            >
-              <ChevronRight size={12} />
-            </button>
-          </div>
-
-          {/* days */}
-
-          <div className="grid grid-cols-7 mb-1">
-            {DAYS_SHORT.map((d) => (
-              <p
-                key={d}
-                className="text-center text-[10px] text-zinc-400 font-bold"
-              >
-                {d}
-              </p>
-            ))}
-          </div>
-
-          {/* calendar cells */}
-
-          <div className="grid grid-cols-7 gap-[2px]">
-            {Array.from({ length: firstDow }).map((_, i) => (
-              <div key={i} />
-            ))}
-
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const d = i + 1;
-              const dk = makeKey(vy, vm, d);
-              const ds = dayStatus(dk);
-              const cfg = ds ? statusCfg[ds] : null;
-              const isToday = dk === todayKey;
-              const isSel = dk === sel;
-
-              return (
-                <button
-                  key={d}
-                  onClick={() => ds && setSel(isSel ? null : dk)}
-                  className="aspect-square rounded-md flex flex-col items-center justify-center gap-[2px] cursor-pointer"
-                  style={{
-                    background: isSel
-                      ? "#0EA5A0"
-                      : isToday
-                        ? "#E8F8F7"
-                        : cfg
-                          ? cfg.bg
-                          : "transparent",
-                    outline: isToday && !isSel ? "2px solid #0EA5A0" : "none",
-                  }}
-                >
-                  <span
-                    className="text-[11px]"
-                    style={{
-                      fontWeight: isToday || isSel ? 700 : 400,
-                      color: isSel
-                        ? "#fff"
-                        : isToday
-                          ? "#0EA5A0"
-                          : cfg
-                            ? "#18181B"
-                            : "#C4C4C8",
-                    }}
-                  >
-                    {d}
-                  </span>
-
-                  {cfg && (
-                    <span
-                      className="w-[4px] h-[4px] rounded-full"
-                      style={{ background: isSel ? "#fff" : cfg.c }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* month summary */}
-
-          {monthSessions.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-zinc-400 flex justify-between text-xs">
-              <p className="text-zinc-600">
-                {monthHadir}/{monthSessions.length} sesi hadir
-              </p>
-
-              <span
-                className="px-2 py-[2px] rounded-full font-bold"
-                style={{
-                  background: monthPct >= 80 ? "#DCFCE7" : "#FEE2E2",
-                  color: monthPct >= 80 ? "#16A34A" : "#DC2626",
-                }}
-              >
-                {monthPct}%
-              </span>
-            </div>
-          )}
-
-          {/* legend */}
-
-          <div className="mt-3 pt-2 border-t border-zinc-400 flex flex-col gap-1">
-            {Object.values(statusCfg).map((cfg) => (
-              <div key={cfg.label} className="flex items-center gap-2">
-                <div
-                  className="w-4 h-4 rounded flex items-center justify-center"
-                  style={{ background: cfg.bg }}
-                >
-                  <cfg.icon size={9} style={{ color: cfg.c }} />
-                </div>
-
-                <span className="text-xs text-zinc-600">{cfg.label}</span>
-              </div>
-            ))}
-          </div>
+    <div className="p-6 md:p-10 flex flex-col gap-8 animate-[slideUp_0.4s_ease_both]">
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+           <div className="w-12 h-12 rounded-2xl bg-indigo flex items-center justify-center text-white shadow-lg shadow-indigo/20">
+              <CalendarDays size={24} />
+           </div>
+           <div>
+              <h1 className="text-2xl font-black text-ink uppercase tracking-tight leading-none">Rekap Presensi Bulanan</h1>
+              <p className="text-[11px] font-bold text-ink-3 uppercase tracking-widest mt-2 opacity-60">Pantau kehadiran Anda berdasarkan rekaman Guru</p>
+           </div>
         </div>
 
-        {/* detail panel */}
-
-        {selRecords ? (
-          <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-zinc-400 bg-zinc-50 flex justify-between">
-              <div>
-                <p className="font-bold text-sm">Detail Absensi</p>
-
-                <p className="text-xs text-zinc-400">{labelFromKey(sel)}</p>
-              </div>
-
-              <button
-                onClick={() => setSel(null)}
-                className="w-6 h-6 border border-zinc-300 rounded-md flex items-center justify-center cursor-pointer"
-              >
-                <ChevronLeft size={12} className="rotate-180" />
-              </button>
-            </div>
-
-            {selRecords.map((r, i) => {
-              const cfg = statusCfg[r.status];
-              const Icon = cfg.icon;
-
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 px-4 py-3 border-t border-zinc-200"
-                >
-                  <p className="text-xs text-zinc-400 w-10 shrink-0">{r.jam}</p>
-
-                  <p className="flex-1 text-sm font-medium">{r.mapel}</p>
-
-                  <span
-                    className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap"
-                    style={{ background: cfg.bg, color: cfg.c }}
-                  >
-                    <Icon size={10} />
-                    {cfg.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="bg-white border border-zinc-200 rounded-xl p-12 flex flex-col items-center text-center gap-2">
-            <CheckCircle2 size={24} className="text-teal-500" />
-
-            <p className="font-semibold">Pilih Tanggal</p>
-
-            <p className="text-sm text-zinc-400 max-w-[180px]">
-              Klik tanggal pada kalender untuk melihat detail absensi.
-            </p>
-          </div>
-        )}
+        <div className="flex items-center gap-4 bg-white border border-border px-5 py-3 rounded-2xl shadow-sm">
+           <button onClick={prevMonth} className="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center text-ink-3 transition-colors">
+              <ChevronLeft size={18} />
+           </button>
+           <div className="min-w-[140px] text-center">
+              <p className="text-[13px] font-black text-ink uppercase tracking-wider">{BULAN_ID[currentMonth]}</p>
+              <p className="text-[10px] font-black text-ink-3 uppercase tracking-[0.2em]">{currentYear}</p>
+           </div>
+           <button onClick={nextMonth} className="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center text-ink-3 transition-colors">
+              <ChevronRight size={18} />
+           </button>
+        </div>
       </div>
+
+      {/* Grid Container */}
+      <div className="bg-surface border border-border rounded-[32px] shadow-card overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
+          {loading ? (
+             <div className="w-full h-80 flex flex-col items-center justify-center gap-4">
+                <Loader2 size={32} className="animate-spin text-indigo" />
+                <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Mengambil histori...</p>
+             </div>
+          ) : (
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-cream/40 border-b border-border">
+                  <th className="sticky left-0 z-20 bg-cream/80 backdrop-blur-md px-6 py-5 text-left text-[10px] font-black uppercase tracking-widest text-ink-3 w-[220px] border-r border-border min-w-[220px]">
+                    Mata Pelajaran
+                  </th>
+                  {daysArray.map(day => (
+                    <th key={day} className="px-3 py-5 text-center text-[10px] font-black uppercase tracking-widest text-ink-3 border-r border-border/50 min-w-[42px]">
+                      {day}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {Object.keys(records).length > 0 ? (
+                  Object.entries(records).map(([subject, attendance]) => (
+                    <tr key={subject} className="hover:bg-cream/10 transition-colors group">
+                      <td className="sticky left-0 z-10 bg-white/95 backdrop-blur-md px-6 py-4 border-r border-border shadow-[4px_0_10px_-2px_rgba(0,0,0,0.02)]">
+                        <div className="flex items-center gap-3">
+                           <div className="w-2 h-2 rounded-full bg-indigo/30" />
+                           <span className="text-[12px] font-black text-ink uppercase tracking-tight">{subject}</span>
+                        </div>
+                      </td>
+                      {daysArray.map(day => {
+                        const status = attendance[day];
+                        const cfg = status ? statusCfg[status] : null;
+
+                        return (
+                          <td key={day} className="p-1.5 border-r border-border/30 text-center">
+                            {cfg ? (
+                              <div 
+                                title={`${subject} - Tgl ${day}: ${status}`}
+                                className={cn(
+                                  "w-8 h-8 mx-auto rounded-lg flex items-center justify-center text-[11px] font-black transition-transform hover:scale-110",
+                                  cfg.bg,
+                                  cfg.border,
+                                  "border"
+                                )}
+                                style={{ color: cfg.c }}
+                              >
+                                {cfg.label}
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 mx-auto rounded-lg border border-dashed border-border/40" />
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={daysInMonth + 1} className="py-20 text-center">
+                       <p className="text-[13px] font-medium text-ink-3 italic uppercase tracking-widest">
+                          Tidak ada data presensi untuk bulan ini
+                       </p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Legend & Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
+         <div className="bg-surface border border-border rounded-[32px] p-8 shadow-card flex flex-wrap gap-8 items-center">
+            <h4 className="text-[11px] font-black text-ink-3 uppercase tracking-[0.2em] w-full mb-2">Keterangan:</h4>
+            {Object.entries(statusCfg).map(([full, cfg]) => (
+              <div key={cfg.label} className="flex items-center gap-3">
+                 <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black border", cfg.bg, cfg.border)} style={{ color: cfg.c }}>
+                    {cfg.label}
+                 </div>
+                 <span className="text-[12px] font-bold text-ink uppercase tracking-wider">{cfg.label} = {full}</span>
+              </div>
+            ))}
+         </div>
+
+         <div className="bg-indigo border border-indigo-border rounded-[32px] p-8 flex items-center gap-6 shadow-xl shadow-indigo/20">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white shrink-0">
+               <FileText size={32} />
+            </div>
+            <div>
+               <p className="text-[11px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">Status Kehadiran</p>
+               <h3 className="text-2xl font-black text-white uppercase tracking-tight">
+                  {attendanceRate >= 90 ? "Sangat Baik" : attendanceRate >= 75 ? "Cukup Baik" : "Perlu Perhatian"}
+               </h3>
+               <p className="text-[12px] font-medium text-white/70 mt-1">Estimasi persentase kehadiran Anda: {attendanceRate}%</p>
+            </div>
+         </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+      `}</style>
     </div>
   );
 }
