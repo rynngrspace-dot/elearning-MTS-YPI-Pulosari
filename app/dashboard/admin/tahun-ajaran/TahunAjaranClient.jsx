@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { 
+  createTahunAjaranAction, 
+  activateTahunAjaranAction, 
+  deleteTahunAjaranAction 
+} from "@/lib/actions/tahun-ajaran-actions";
 
 export default function TahunAjaranClient({ initialData }) {
   const [data, setData] = useState(initialData);
@@ -9,66 +14,55 @@ export default function TahunAjaranClient({ initialData }) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ tahun: "", semester: "Ganjil" });
 
+  useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
+
   const handleToggleActive = async (id) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/tahun-ajaran", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const res = await response.json();
+      const res = await activateTahunAjaranAction(id);
       if (res.success) {
-        window.location.reload();
+        // Success handled by revalidation
       } else {
         alert("Gagal mengubah status: " + res.error);
-        setIsLoading(false);
       }
     } catch (error) {
       alert("Error: " + error.message);
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (!confirm("Apakah Anda yakin ingin menghapus tahun ajaran ini?")) return;
-    setIsLoading(true);
     try {
-      const response = await fetch(`/api/tahun-ajaran?id=${id}`, {
-        method: "DELETE",
-      });
-      const res = await response.json();
+      const res = await deleteTahunAjaranAction(id);
       if (res.success) {
-        window.location.reload();
+        // Success handled by revalidation
       } else {
         alert("Gagal menghapus: " + res.error);
-        setIsLoading(false);
       }
     } catch (error) {
       alert("Error: " + error.message);
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     try {
-      const response = await fetch("/api/tahun-ajaran", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const res = await response.json();
+      const res = await createTahunAjaranAction(formData);
       if (res.success) {
         setIsModalOpen(false);
-        window.location.reload();
+        setFormData({ tahun: "", semester: "Ganjil" });
       } else {
         alert("Gagal menambah tahun ajaran: " + res.error);
-        setIsLoading(false);
       }
     } catch (error) {
       alert("Error: " + error.message);
+    } finally {
       setIsLoading(false);
     }
   };

@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { createMapelAction, updateMapelAction, deleteMapelAction } from "@/lib/actions/mapel-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -61,7 +62,7 @@ export default function MapelClient({ initialData }) {
   ];
 
   const kelompokColors = {
-    "Kelompok A (Umum)": "bg-emerald-100 text-emerald-800 border-emerald-200",
+    "Kelompok A (Umum)": "bg-indigo-100 text-indigo-800 border-indigo-200",
     "Kelompok B (Umum)": "bg-blue-100 text-blue-800 border-blue-200",
     "Kelompok C (Kejuruan)": "bg-purple-100 text-purple-800 border-purple-200",
     "Lainnya": "bg-slate-100 text-slate-700 border-slate-200",
@@ -112,18 +113,11 @@ export default function MapelClient({ initialData }) {
       return;
     }
 
-    setIsLoading(true);
     try {
-      const method = editingId ? "PATCH" : "POST";
-      const body = editingId ? { id: editingId, ...formData } : formData;
-      
-      const response = await fetch("/api/mapel", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      
-      const res = await response.json();
+      const res = editingId 
+        ? await updateMapelAction(editingId, formData)
+        : await createMapelAction(formData);
+
       if (res.success) {
         toast({
           title: "Berhasil!",
@@ -132,14 +126,12 @@ export default function MapelClient({ initialData }) {
         });
         setIsModalOpen(false);
         resetForm();
-        router.refresh();
       } else {
         toast({
           title: "Gagal Menyimpan",
           description: res.error || "Terjadi kesalahan pada server.",
           variant: "destructive",
         });
-        setIsLoading(false);
       }
     } catch (error) {
       toast({
@@ -154,11 +146,8 @@ export default function MapelClient({ initialData }) {
   const handleDelete = async () => {
     if (!mapelToDelete) return;
 
-    setIsLoading(true);
-    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/mapel?id=${mapelToDelete}`, { method: "DELETE" });
-      const res = await response.json();
+      const res = await deleteMapelAction(mapelToDelete);
       if (res.success) {
         toast({
           title: "Berhasil!",
@@ -166,7 +155,6 @@ export default function MapelClient({ initialData }) {
           variant: "success",
         });
         setIsConfirmOpen(false);
-        router.refresh();
       } else {
         toast({
           title: "Gagal Menghapus",
@@ -206,26 +194,28 @@ export default function MapelClient({ initialData }) {
     <div className="p-6 md:p-12 flex flex-col gap-10 animate-slideUp">
       
       {/* Header Section (Following 'Kelola Siswa' pattern) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-2xl font-black text-ink tracking-tight uppercase">Kelola Data Mata Pelajaran</h1>
-          <p className="text-sm text-ink-3 font-medium mt-1">Sistem Informasi Kurikulum & Akademik Jamil</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+           <div className="flex items-center gap-6">
+              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+                 <BookMarked size={28} />
+              </div>
+              <div>
+                 <h1 className="text-3xl font-black text-ink tracking-tight uppercase leading-none">Manajemen Mata Pelajaran</h1>
+                  <div className="text-[11px] text-ink-3 font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
+                     <div className="w-2 h-0.5 bg-indigo/40" /> Kurikulum & Akademik Jamil
+                  </div>
+              </div>
+           </div>
+
+           <div className="flex items-center gap-3">
+              <button 
+                onClick={() => { setEditingMapel(null); setIsModalOpen(true); }}
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+              >
+                <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Mata Pelajaran
+              </button>
+           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-5 py-2.5 border border-border rounded-2xl bg-surface text-ink-2 text-sm font-bold hover:bg-cream transition-all">
-            <Download size={16} />
-            Export
-          </button>
-          <button 
-            onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo text-white rounded-2xl text-[13px] font-bold hover:bg-indigo-hover transition-all shadow-lg shadow-indigo/20"
-          >
-            <Plus size={20} />
-            Tambah Mapel
-          </button>
-        </div>
-      </div>
 
       {/* Filter & Toolbar Section */}
       <div className="flex flex-col gap-6">

@@ -51,6 +51,9 @@ model Student {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  tugasSubmissions TugasSubmission[]
+  absensi          Absensi[]
 }
 
 model Teacher {
@@ -72,6 +75,10 @@ model Teacher {
 
   pengampu     Pengampu[]     @relation("TeacherPengampu")
   waliKelasDi  Kelas[]        @relation("WaliKelas")
+  
+  materi       Materi[]
+  tugas        Tugas[]
+  absensi      Absensi[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -84,6 +91,9 @@ model MataPelajaran {
   kelompok  String?  // e.g. "Kelompok A (Umum)"
   teachers  Teacher[]
   pengampu  Pengampu[]
+  materi    Materi[]
+  tugas     Tugas[]
+  absensi   Absensi[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -98,6 +108,9 @@ model Kelas {
 
   students    Student[]
   pengampu    Pengampu[]
+  materi      Materi[]
+  tugas       Tugas[]
+  absensi     Absensi[]
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -118,6 +131,10 @@ model Pengampu {
   tahunAjaranId String
   tahunAjaran   TahunAjaran    @relation(fields: [tahunAjaranId], references: [id])
   
+  hari          String?        // e.g. "Senin", "Selasa"
+  jamMulai      String?        // e.g. "07:00"
+  jamSelesai    String?        // e.g. "08:30"
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -136,4 +153,84 @@ model TahunAjaran {
   updatedAt DateTime @updatedAt
 
   @@unique([tahun, semester])
+}
+
+model Materi {
+  id           String   @id @default(cuid())
+  judul        String
+  deskripsi    String?
+  fileUrl      String?
+  
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id])
+  
+  mapelId      String
+  mapel        MataPelajaran @relation(fields: [mapelId], references: [id])
+  
+  kelasId      String
+  kelas        Kelas    @relation(fields: [kelasId], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Tugas {
+  id           String   @id @default(cuid())
+  judul        String
+  deskripsi    String?
+  fileUrl      String?
+  dueDate      DateTime?
+  
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id])
+  
+  mapelId      String
+  mapel        MataPelajaran @relation(fields: [mapelId], references: [id])
+  
+  kelasId      String
+  kelas        Kelas    @relation(fields: [kelasId], references: [id])
+  
+  submissions  TugasSubmission[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model TugasSubmission {
+  id           String   @id @default(cuid())
+  tugasId      String
+  tugas        Tugas    @relation(fields: [tugasId], references: [id])
+  
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id])
+  
+  fileUrl      String?
+  nilai        Int?
+  feedback     String?
+  
+  submittedAt  DateTime @default(now())
+  
+  @@unique([tugasId, studentId])
+}
+
+model Absensi {
+  id           String   @id @default(cuid())
+  tanggal      DateTime @default(now())
+  status       String   // "Hadir", "Izin", "Sakit", "Alpha"
+  keterangan   String?
+  
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id])
+  
+  kelasId      String
+  kelas        Kelas    @relation(fields: [kelasId], references: [id])
+  
+  mapelId      String
+  mapel        MataPelajaran @relation(fields: [mapelId], references: [id])
+  
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id])
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

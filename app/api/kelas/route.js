@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/db";
+import { KelasService } from "@/lib/services/kelas-service";
 
 export async function GET() {
   try {
-    const kelas = await prisma.kelas.findMany({
-      include: {
-        _count: {
-          select: { students: true }
-        }
-      },
-      orderBy: { nama: 'asc' }
-    });
+    const kelas = await KelasService.getAll();
     return NextResponse.json(kelas);
   } catch (error) {
     console.error("GET Kelas Error:", error);
@@ -21,15 +14,10 @@ export async function GET() {
 export async function POST(req) {
   try {
     const data = await req.json();
-    const result = await prisma.kelas.create({
-      data: {
-        nama: data.nama,
-        tingkat: data.tingkat,
-        waliKelasId: data.waliKelasId || null,
-      }
-    });
+    const result = await KelasService.create(data);
     return NextResponse.json(result);
   } catch (error) {
+    console.error("POST Kelas Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

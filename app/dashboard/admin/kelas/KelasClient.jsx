@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { createKelasAction, updateKelasAction, deleteKelasAction } from "@/lib/actions/kelas-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -15,10 +16,13 @@ import {
   School,
   X,
   GraduationCap,
+  Eye,
+  LayoutGrid,
+  List,
   Users,
-  ChevronRight,
-  Eye
+  ChevronRight
 } from "lucide-react";
+import Link from "next/link";
 
 export default function KelasClient({ initialKelas, teachers }) {
   const router = useRouter();
@@ -39,6 +43,7 @@ export default function KelasClient({ initialKelas, teachers }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [kelasToDelete, setKelasToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'table'
 
   const filteredData = useMemo(() => {
     return kelas.filter(k => 
@@ -64,17 +69,12 @@ export default function KelasClient({ initialKelas, teachers }) {
        return;
     }
 
-    setIsSaving(true);
     try {
-      const method = editingKelas ? 'PUT' : 'POST';
-      const url = editingKelas ? `/api/kelas/${editingKelas.id}` : '/api/kelas';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const res = editingKelas 
+        ? await updateKelasAction(editingKelas.id, data)
+        : await createKelasAction(data);
 
-      if (res.ok) {
+      if (res.success) {
         toast({
           title: "Berhasil!",
           description: "Data kelas telah berhasil disimpan ke database.",
@@ -82,12 +82,10 @@ export default function KelasClient({ initialKelas, teachers }) {
         });
         setIsModalOpen(false);
         setEditingKelas(null);
-        router.refresh();
       } else {
-        const err = await res.json();
         toast({
           title: "Gagal Menyimpan",
-          description: err.error || "Terjadi kesalahan pada server.",
+          description: res.error || "Terjadi kesalahan pada server.",
           variant: "destructive",
         });
       }
@@ -108,20 +106,18 @@ export default function KelasClient({ initialKelas, teachers }) {
 
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/kelas/${kelasToDelete}`, { method: 'DELETE' });
-      if (res.ok) {
+      const res = await deleteKelasAction(kelasToDelete);
+      if (res.success) {
         toast({
           title: "Kelas Dihapus",
           description: "Data kelas telah berhasil dihapus dari sistem.",
           variant: "success",
         });
         setIsConfirmOpen(false);
-        router.refresh();
       } else {
-        const err = await res.json();
         toast({
           title: "Gagal Menghapus",
-          description: err.error || "Terjadi kesalahan saat menghapus kelas.",
+          description: res.error || "Terjadi kesalahan saat menghapus kelas.",
           variant: "destructive",
         });
       }
@@ -146,81 +142,167 @@ export default function KelasClient({ initialKelas, teachers }) {
   return (
     <>
       <div className="p-6 md:p-12 flex flex-col gap-10 animate-slideUp">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+           <div className="flex items-center gap-6">
+              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+                 <School size={28} />
+              </div>
+              <div>
+                 <h1 className="text-3xl font-black text-ink tracking-tight uppercase leading-none">Data Rombongan Belajar</h1>
+                 <div className="text-[11px] text-ink-3 font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
+                    <div className="w-2 h-0.5 bg-indigo/40" /> Manajemen Kelas & Wali
+                 </div>
+              </div>
+           </div>
+
+           <div className="flex items-center gap-3">
+              <button 
+                onClick={() => { setEditingKelas(null); setIsModalOpen(true); }}
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+              >
+                <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Kelas Baru
+              </button>
+           </div>
+        </div>
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h1 className="text-2xl font-black text-ink tracking-tight uppercase leading-none">Manajemen Ruang Kelas</h1>
-              <div className="h-1 w-20 bg-amber-500 mt-3 rounded-full" />
-              <p className="text-[11px] text-ink-3 font-bold uppercase tracking-widest mt-4">Daftar Rombongan Belajar & Wali Kelas</p>
+            <div className="relative group flex-1">
+              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-indigo-500 transition-colors" />
+              <input 
+                type="text" 
+                placeholder="CARI NAMA KELAS..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
+              />
             </div>
-            
-            <button className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-2xl text-[11px] font-black hover:bg-amber-600 transition-all shadow-xl shadow-amber-500/20 uppercase tracking-widest border border-white/10" onClick={() => { setEditingKelas(null); setIsModalOpen(true); }}>
-              <Plus size={18} strokeWidth={3} />
-              Tambah Kelas
-            </button>
+
+            <div className="flex bg-surface p-1 rounded-2xl border border-border w-fit shadow-inner">
+               <button 
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === "grid" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "text-ink-3 hover:text-ink"
+                )}
+               >
+                 <LayoutGrid size={16} /> Grid
+               </button>
+               <button 
+                onClick={() => setViewMode("table")}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === "table" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "text-ink-3 hover:text-ink"
+                )}
+               >
+                 <List size={16} /> Tabel
+               </button>
+            </div>
           </div>
 
-          <div className="relative group">
-            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-amber-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="CARI NAMA KELAS..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-amber-500/10 transition-all"
-            />
+
+        {viewMode === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredData.map((k) => (
+              <div key={k.id} className="bg-surface border border-border rounded-[40px] p-8 shadow-card hover:shadow-2xl hover:shadow-indigo-500/5 transition-all group relative overflow-hidden">
+                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+                 
+                 <div className="flex justify-between items-start mb-6">
+                    <div className="w-14 h-14 rounded-[22px] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-inner group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                       <School size={28} strokeWidth={2} />
+                    </div>
+                    <div className="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                        <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 backdrop-blur-sm transition-all cursor-pointer shadow-lg"><Eye size={18} /></Link>
+                        <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 backdrop-blur-sm transition-all cursor-pointer shadow-lg"><Edit size={18} /></button>
+                        <button onClick={() => openDeleteConfirm(k.id)} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-red-500 hover:border-red-100 backdrop-blur-sm transition-all cursor-pointer shadow-lg"><Trash2 size={18} /></button>
+                     </div>
+                 </div>
+
+                 <div>
+                    <h3 className="text-2xl font-black text-ink tracking-tight uppercase leading-none mb-2">{k.nama}</h3>
+                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6">Tingkat {k.tingkat}</p>
+                 </div>
+
+                 <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-cream/50 rounded-2xl border border-border/50">
+                       <div className="flex items-center gap-3">
+                          <Users size={16} className="text-ink-3" />
+                          <span className="text-[11px] font-black text-ink uppercase tracking-widest leading-none">Total Siswa</span>
+                       </div>
+                       <span className="text-sm font-black text-ink">{k._count.students}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-2 p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/50">
+                       <div className="flex items-center gap-3">
+                          <GraduationCap size={16} className="text-indigo-600/60" />
+                          <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest leading-none">Wali Kelas</span>
+                       </div>
+                       <p className="text-[13px] font-black text-ink uppercase tracking-tight truncate">{k.waliKelas?.user.name || "Belum Ditentukan"}</p>
+                    </div>
+                 </div>
+
+                 <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-full mt-6 py-4 border border-border rounded-2xl text-[10px] font-black text-ink-3 uppercase tracking-widest hover:bg-cream transition-all flex items-center justify-center gap-2 cursor-pointer">Lihat Detail <ChevronRight size={14} /></Link>
+              </div>
+            ))}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredData.map((k) => (
-            <div key={k.id} className="bg-surface border border-border rounded-[40px] p-8 shadow-card hover:shadow-2xl hover:shadow-amber-500/5 transition-all group relative overflow-hidden">
-               <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
-               
-               <div className="flex justify-between items-start mb-6">
-                  <div className="w-14 h-14 rounded-[22px] bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-inner group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
-                     <School size={28} strokeWidth={2} />
-                  </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-9 h-9 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-indigo transition-colors"><Edit size={16} /></button>
-                     <button onClick={() => openDeleteConfirm(k.id)} className="w-9 h-9 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
-                  </div>
-               </div>
-
-               <div>
-                  <h3 className="text-2xl font-black text-ink tracking-tight uppercase leading-none mb-2">{k.nama}</h3>
-                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-6">Tingkat {k.tingkat}</p>
-               </div>
-
-               <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-cream/50 rounded-2xl border border-border/50">
-                     <div className="flex items-center gap-3">
-                        <Users size={16} className="text-ink-3" />
-                        <span className="text-[11px] font-black text-ink uppercase tracking-widest leading-none">Total Siswa</span>
-                     </div>
-                     <span className="text-sm font-black text-ink">{k._count.students}</span>
-                  </div>
-
-                  <div className="flex flex-col gap-2 p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/50">
-                     <div className="flex items-center gap-3">
-                        <GraduationCap size={16} className="text-indigo/60" />
-                        <span className="text-[10px] font-black text-indigo/60 uppercase tracking-widest leading-none">Wali Kelas</span>
-                     </div>
-                     <p className="text-[13px] font-black text-ink uppercase tracking-tight truncate">{k.waliKelas?.user.name || "Belum Ditentukan"}</p>
-                  </div>
-               </div>
-
-               <button className="w-full mt-6 py-3 border border-border rounded-2xl text-[10px] font-black text-ink-3 uppercase tracking-widest hover:bg-cream transition-all flex items-center justify-center gap-2">Lihat Detail <ChevronRight size={14} /></button>
+        ) : (
+          <div className="bg-surface border border-border rounded-[40px] overflow-hidden shadow-card p-2 animate-fadeIn">
+            <div className="overflow-x-auto rounded-[32px]">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-cream/40">
+                  <tr>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Nama Kelas</th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Tingkat</th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Wali Kelas</th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Total Siswa</th>
+                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-right">Opsi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredData.map((k) => (
+                    <tr key={k.id} className="hover:bg-cream/20 transition-all group">
+                      <td className="px-8 py-5">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                               <School size={18} />
+                            </div>
+                            <span className="text-[13px] font-black text-ink uppercase tracking-tight">{k.nama}</span>
+                         </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100 uppercase tracking-widest">Kelas {k.tingkat}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-ink-2 truncate max-w-[200px]">
+                           {k.waliKelas?.user.name || "Belum Ditentukan"}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2 font-black text-ink text-sm">
+                           <Users size={14} className="text-indigo-500" />
+                           {k._count.students}
+                        </div>
+                      </td>
+                        <td className="px-7 py-4 text-right">
+                           <div className="flex items-center justify-end gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 transition-all cursor-pointer shadow-sm"><Eye size={16} /></Link>
+                              <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 transition-all cursor-pointer shadow-sm"><Edit size={16} /></button>
+                              <button onClick={() => openDeleteConfirm(k.id)} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-red-500 hover:border-red-100 transition-all cursor-pointer shadow-sm"><Trash2 size={16} /></button>
+                           </div>
+                        </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          </div>
+        )}
 
-          {filteredData.length === 0 && (
-            <div className="col-span-full py-20 text-center bg-surface border border-dashed border-border rounded-[40px]">
-               <School size={48} className="mx-auto text-ink-3/20 mb-4" />
-               <p className="text-sm font-black text-ink-3 uppercase tracking-widest">Tidak Ada Kelas Ditemukan</p>
-            </div>
-          )}
-        </div>
+        {filteredData.length === 0 && (
+          <div className="py-20 text-center bg-surface border border-dashed border-border rounded-[40px]">
+             <School size={48} className="mx-auto text-ink-3/20 mb-4" />
+             <p className="text-sm font-black text-ink-3 uppercase tracking-widest">Tidak Ada Kelas Ditemukan</p>
+          </div>
+        )}
       </div>
 
       {/* FORM MODAL */}
@@ -228,9 +310,9 @@ export default function KelasClient({ initialKelas, teachers }) {
         <div className="fixed inset-0 z-100 flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-ink/60 backdrop-blur-md animate-fadeIn" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-surface w-full max-w-md rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
-            <div className="p-10 border-b border-border bg-amber-50/30 flex items-center justify-between">
+            <div className="p-10 border-b border-border bg-indigo-50/30 flex items-center justify-between">
                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-[22px] bg-amber-500/10 flex items-center justify-center text-amber-600 border border-amber-500/5 shadow-inner">
+                  <div className="w-14 h-14 rounded-[22px] bg-indigo-500/10 flex items-center justify-center text-indigo-600 border border-indigo-500/5 shadow-inner">
                      <Plus size={24} strokeWidth={3} />
                   </div>
                   <div>
@@ -244,7 +326,7 @@ export default function KelasClient({ initialKelas, teachers }) {
             <form onSubmit={handleSave} className="p-10 flex flex-col gap-6">
                <div className="flex flex-col gap-2.5">
                   <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Nama Lengkap Kelas</label>
-                  <input type="text" name="nama" defaultValue={editingKelas?.nama} placeholder="CONTOH: X RPL 1" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black uppercase tracking-tight focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all", formErrors.nama ? "border-red-500 bg-red-50/10" : "border-border")} />
+                  <input type="text" name="nama" defaultValue={editingKelas?.nama} placeholder="CONTOH: X RPL 1" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black uppercase tracking-tight focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all", formErrors.nama ? "border-red-500 bg-red-50/10" : "border-border")} />
                   {formErrors.nama && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.nama}</p>}
                </div>
 
@@ -265,7 +347,7 @@ export default function KelasClient({ initialKelas, teachers }) {
                   </select>
                </div>
 
-               <button type="submit" className="w-full mt-4 py-4.5 bg-amber-500 text-white rounded-3xl text-[11px] font-black shadow-xl shadow-amber-500/20 hover:bg-amber-600 transition-all uppercase tracking-widest border border-white/10">Simpan Kelas</button>
+               <button type="submit" className="w-full mt-4 py-4.5 bg-indigo-500 text-white rounded-3xl text-[11px] font-black shadow-xl shadow-indigo-500/20 hover:bg-indigo-600 transition-all uppercase tracking-widest border border-white/10">Simpan Kelas</button>
             </form>
           </div>
         </div>

@@ -1,4 +1,8 @@
-import prisma from "@/lib/db";
+import { PengampuService } from "@/lib/services/pengampu-service";
+import { GuruService } from "@/lib/services/guru-service";
+import { MapelService } from "@/lib/services/mapel-service";
+import { KelasService } from "@/lib/services/kelas-service";
+import { TahunAjaranService } from "@/lib/services/tahun-ajaran-service";
 import PengampuClient from "./PengampuClient";
 
 export const dynamic = "force-dynamic";
@@ -11,31 +15,11 @@ export default async function AdminPengampuPage() {
     kelas,
     academics
   ] = await Promise.all([
-    prisma.pengampu.findMany({
-      include: {
-        teacher: { include: { user: true } },
-        mapel: true,
-        kelas: true,
-        tahunAjaran: true,
-      },
-      orderBy: [
-        { tahunAjaran: { tahun: 'desc' } },
-        { kelas: { nama: 'asc' } }
-      ]
-    }),
-    prisma.teacher.findMany({
-      include: { user: true },
-      orderBy: { user: { name: 'asc' } }
-    }),
-    prisma.mataPelajaran.findMany({
-      orderBy: { nama: 'asc' }
-    }),
-    prisma.kelas.findMany({
-      orderBy: { nama: 'asc' }
-    }),
-    prisma.tahunAjaran.findMany({
-      orderBy: { tahun: 'desc' }
-    })
+    PengampuService.getAll(),
+    GuruService.getAllOriginal(),
+    MapelService.getAll(),
+    KelasService.getAll(),
+    TahunAjaranService.getAll()
   ]);
 
   return (

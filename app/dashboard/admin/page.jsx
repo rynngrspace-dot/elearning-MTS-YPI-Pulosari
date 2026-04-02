@@ -13,34 +13,95 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import prisma from "@/lib/db";
+import { cn } from "@/lib/utils";
 
 export default async function AdminPage() {
-  // Fetch real statistics from database
+  // Fetch real statistics & integrity alerts
   const [
     totalSiswa,
     totalGuru,
     totalKelas,
     totalMapel,
-    activeTA
+    activeTA,
+    studentsNoClass,
+    latestStudents,
+    latestTeachers,
+    latestMateri,
+    latestTugas
   ] = await Promise.all([
     prisma.student.count(),
     prisma.teacher.count(),
     prisma.kelas.count(),
     prisma.mataPelajaran.count(),
-    prisma.tahunAjaran.findFirst({ where: { isActive: true } })
+    prisma.tahunAjaran.findFirst({ where: { isActive: true } }),
+    prisma.student.count({ where: { kelasId: null } }),
+    prisma.student.findMany({ 
+      take: 2, 
+      orderBy: { createdAt: 'desc' }, 
+      include: { user: true } 
+    }),
+    prisma.teacher.findMany({ 
+      take: 2, 
+      orderBy: { createdAt: 'desc' }, 
+      include: { user: true } 
+    }),
+    prisma.materi.findMany({ 
+      take: 2, 
+      orderBy: { createdAt: 'desc' }, 
+      include: { teacher: { include: { user: true } } } 
+    }),
+    prisma.tugas.findMany({ 
+      take: 2, 
+      orderBy: { createdAt: 'desc' }, 
+      include: { teacher: { include: { user: true } } } 
+    }),
   ]);
 
-  const stats = [
-    { icon:Users, label:"Total Siswa", value:totalSiswa.toString(), color:"#6366F1", bg:"bg-indigo-100", unit:"siswa", href:"/dashboard/admin/siswa" },
-    { icon:UserRoundCheck, label:"Total Guru", value:totalGuru.toString(), color:"#0EA5A0", bg:"bg-teal-100", unit:"guru", href:"/dashboard/admin/guru" },
-    { icon:School, label:"Total Kelas", value:totalKelas.toString(), color:"#F59E0B", bg:"bg-amber-100", unit:"kelas", href:"/dashboard/admin/kelas" },
-    { icon:BookMarked, label:"Mata Pelajaran", value:totalMapel.toString(), color:"#EC4899", bg:"bg-pink-100", unit:"mapel", href:"/dashboard/admin/mapel" },
-  ];
-
+  // Combine and sort activities
   const recentActivity = [
-    { user:"Admin", action:"Sistem Berhasil Dimigrasi", target:"Database V2", time:"Baru saja" },
-    { user:"Admin", action:"Menambahkan Siswa Baru", target:"Andi Wijaya", time:"5 menit yang lalu" },
-    { user:"Pak Jamil", action:"Status Wali Kelas", target:"X RPL 1", time:"15 menit yang lalu" },
+    ...latestStudents.map(s => ({
+      user: "System",
+      action: "Siswa Baru Terdaftar",
+      target: s.user.name,
+      time: s.createdAt,
+      type: "siswa"
+    })),
+    ...latestTeachers.map(t => ({
+      user: "Admin",
+      action: "Guru Baru Ditambahkan",
+      target: t.user.name,
+      time: t.createdAt,
+      type: "guru"
+    })),
+    ...latestMateri.map(m => ({
+      user: m.teacher.user.name,
+      action: "Mengunggah Materi Baru",
+      target: m.judul,
+      time: m.createdAt,
+      type: "materi"
+    })),
+    ...latestTugas.map(tg => ({
+      user: tg.teacher.user.name,
+      action: "Membuat Tugas Baru",
+      target: tg.judul,
+      time: tg.createdAt,
+      type: "tugas"
+    })),
+  ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
+
+  const formatDistance = (date) => {
+    const diff = Math.floor((new Date() - new Date(date)) / 1000 / 60);
+    if (diff < 1) return "Baru saja";
+    if (diff < 60) return `${diff} menit lalu`;
+    if (diff < 1440) return `${Math.floor(diff/60)} jam lalu`;
+    return new Date(date).toLocaleDateString('id-ID');
+  };
+
+  const stats = [
+    { icon:Users, label:"Total Siswa", value:totalSiswa.toString(), color:"#6366F1", bg:"bg-indigo-light", unit:"siswa", href:"/dashboard/admin/siswa" },
+    { icon:UserRoundCheck, label:"Total Guru", value:totalGuru.toString(), color:"#6366F1", bg:"bg-indigo-light", unit:"guru", href:"/dashboard/admin/guru" },
+    { icon:School, label:"Total Kelas", value:totalKelas.toString(), color:"#6366F1", bg:"bg-indigo-light", unit:"kelas", href:"/dashboard/admin/kelas" },
+    { icon:BookMarked, label:"Mata Pelajaran", value:totalMapel.toString(), color:"#6366F1", bg:"bg-indigo-light", unit:"mapel", href:"/dashboard/admin/mapel" },
   ];
 
   const today = new Date().toLocaleDateString('id-ID', { 
@@ -139,10 +200,10 @@ export default async function AdminPage() {
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-[13px] font-black text-ink">{a.user}</span>
                       <div className="w-1 h-1 rounded-full bg-border" />
-                      <span className="text-[11px] font-bold text-ink-3 leading-none italic">{a.time}</span>
+                      <span className="text-[11px] font-bold text-ink-3 leading-none italic">{formatDistance(a.time)}</span>
                     </div>
                     <p className="text-[12px] font-bold text-indigo uppercase tracking-wide">
-                      {a.action} <span className="text-ink-3 font-medium lowercase">pada</span> {a.target}
+                      {a.action} <span className="text-ink-3 font-medium lowercase italic">"{a.target}"</span>
                     </p>
                   </div>
                 </div>
@@ -153,19 +214,23 @@ export default async function AdminPage() {
           {/* Status */}
           <div className="grid grid-cols-2 gap-6">
             
-            <div className="bg-emerald-50/50 border border-emerald-200 rounded-[32px] p-7 group hover:bg-emerald-50 transition-colors">
-              <p className="text-[10px] text-emerald-700 font-black uppercase tracking-widest mb-4">Network Status</p>
+            <div className={cn("border rounded-[32px] p-7 group transition-all", studentsNoClass > 0 ? "bg-red-50 border-red-200" : "bg-indigo-50/50 border-indigo-200")}>
+              <p className={cn("text-[10px] font-black uppercase tracking-widest mb-4", studentsNoClass > 0 ? "text-red-700" : "text-indigo-700")}>
+                {studentsNoClass > 0 ? "Data Warning" : "Integrity Status"}
+              </p>
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/20"/>
-                <p className="text-xl font-black text-emerald-950 tracking-tighter">Stabil (99.9%)</p>
+                <div className={cn("w-3 h-3 rounded-full animate-pulse shadow-lg", studentsNoClass > 0 ? "bg-red-500 shadow-red-500/20" : "bg-indigo-500 shadow-indigo-500/20")}/>
+                <p className={cn("text-xl font-black tracking-tighter", studentsNoClass > 0 ? "text-red-950" : "text-indigo-950")}>
+                  {studentsNoClass > 0 ? `${studentsNoClass} Siswa Tanpa Kelas` : "Data Sinkron (100%)"}
+                </p>
               </div>
             </div>
 
             <div className="bg-indigo-50/50 border border-indigo-200 rounded-[32px] p-7 group hover:bg-indigo-50 transition-colors">
-              <p className="text-[10px] text-indigo-700 font-black uppercase tracking-widest mb-4">Storage Used</p>
+              <p className="text-[10px] text-indigo-700 font-black uppercase tracking-widest mb-4">Storage Used (Supabase)</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-xl font-black text-indigo-950 tracking-tighter">24.5 GB</p>
-                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">/ 100 GB</span>
+                <p className="text-xl font-black text-indigo-950 tracking-tighter">0.5 GB</p>
+                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">/ 50 GB</span>
               </div>
             </div>
 
@@ -182,13 +247,13 @@ export default async function AdminPage() {
 
             <div className="flex flex-col gap-3">
               {[
-                { label:"Tambah Siswa", href:"/dashboard/admin/siswa", icon:UserPlus, color:"#6366F1", bg:"bg-indigo-100" },
-                { label:"Data Pengampu", href:"/dashboard/admin/pengampu", icon:Briefcase, color:"#10B981", bg:"bg-emerald-100" },
-                { label:"Kelola Kelas", href:"/dashboard/admin/kelas", icon:School, color:"#F59E0B", bg:"bg-amber-100" },
-                { label:"Daftar Mapel", href:"/dashboard/admin/mapel", icon:BookMarked, color:"#EC4899", bg:"bg-pink-100" },
+                { label:"Tambah Siswa", href:"/dashboard/admin/siswa", icon:UserPlus, color:"#6366F1", bg:"bg-indigo-light" },
+                { label:"Data Pengampu", href:"/dashboard/admin/pengampu", icon:Briefcase, color:"#6366F1", bg:"bg-indigo-light" },
+                { label:"Kelola Kelas", href:"/dashboard/admin/kelas", icon:School, color:"#6366F1", bg:"bg-indigo-light" },
+                { label:"Daftar Mapel", href:"/dashboard/admin/mapel", icon:BookMarked, color:"#6366F1", bg:"bg-indigo-light" },
               ].map(a => (
                 <Link key={a.label} href={a.href} className="group">
-                  <div className={`flex items-center gap-4 px-5 py-4 rounded-3xl ${a.bg} border border-transparent hover:border-white group-hover:scale-[1.02] transition-all`}>
+                  <div className={`flex items-center gap-4 px-5 py-4 rounded-3xl ${a.bg} border border-transparent hover:border-indigo/20 group-hover:scale-[1.02] transition-all cursor-pointer`}>
                     
                     <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
                       <a.icon size={18} style={{ color: a.color }} strokeWidth={2.5}/>
@@ -206,15 +271,15 @@ export default async function AdminPage() {
           </div>
 
           {/* Backup Warning */}
-          <div className="bg-amber-100/50 border border-amber-200 rounded-[32px] p-7">
+          <div className="bg-indigo-50 border border-indigo-100 rounded-[32px] p-7">
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
                 <FileText size={22} className="text-white"/>
               </div>
 
               <div>
-                <p className="text-[13px] font-black text-amber-900 leading-none">Auto-Backup</p>
-                <p className="text-[11px] text-amber-800/70 mt-2 font-medium leading-relaxed">
+                <p className="text-[13px] font-black text-indigo-900 leading-none">Auto-Backup</p>
+                <p className="text-[11px] text-indigo-800/70 mt-2 font-medium leading-relaxed">
                   Backup sistem aktif. Terakhir dicadangkan <span className="font-bold">3 jam yang lalu</span>.
                 </p>
               </div>

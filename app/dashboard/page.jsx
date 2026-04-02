@@ -7,7 +7,6 @@ import { useEffect } from "react";
 export default function DashboardIndexPage() {
   const { user } = useAuth();
   
-  // Gunakan redirect dari next/navigation untuk berpindah ke folder role masing-masing
   useEffect(() => {
     if (user.role === "admin") {
       redirect("/dashboard/admin");

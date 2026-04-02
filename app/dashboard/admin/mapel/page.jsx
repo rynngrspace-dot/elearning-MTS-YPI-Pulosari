@@ -1,15 +1,7 @@
-import prisma from "@/lib/db";
+import { MapelService } from "@/lib/services/mapel-service";
 import MapelClient from "./mapel-client";
 
 export default async function AdminMapelPage() {
-  const mapels = await prisma.mataPelajaran.findMany({
-    orderBy: { nama: "asc" },
-    include: {
-      _count: {
-        select: { teachers: true }
-      }
-    }
-  });
-
+  const mapels = await MapelService.getAll();
   return <MapelClient initialData={mapels} />;
 }

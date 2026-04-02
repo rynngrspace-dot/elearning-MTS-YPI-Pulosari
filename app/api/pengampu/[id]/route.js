@@ -1,23 +1,14 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/db";
+import { PengampuService } from "@/lib/services/pengampu-service";
 
 export async function PUT(req, { params }) {
   try {
     const { id } = await params;
     const data = await req.json();
-
-    const result = await prisma.pengampu.update({
-      where: { id },
-      data: {
-        teacherId: data.teacherId,
-        mapelId: data.mapelId,
-        kelasId: data.kelasId,
-        tahunAjaranId: data.tahunAjaranId,
-      }
-    });
-
+    const result = await PengampuService.update(id, data);
     return NextResponse.json(result);
   } catch (error) {
+    console.error("PUT Pengampu Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -25,9 +16,10 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     const { id } = await params;
-    await prisma.pengampu.delete({ where: { id } });
+    await PengampuService.delete(id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("DELETE Pengampu Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

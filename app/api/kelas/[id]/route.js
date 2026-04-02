@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/db";
+import { KelasService } from "@/lib/services/kelas-service";
 
 export async function PUT(req, { params }) {
   try {
     const { id } = await params;
     const data = await req.json();
-
-    const result = await prisma.kelas.update({
-      where: { id },
-      data: {
-        nama: data.nama,
-        tingkat: data.tingkat,
-        waliKelasId: data.waliKelasId || null,
-      }
-    });
-
+    const result = await KelasService.update(id, data);
     return NextResponse.json(result);
   } catch (error) {
+    console.error("PUT Kelas Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -24,9 +16,10 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     const { id } = await params;
-    await prisma.kelas.delete({ where: { id } });
+    await KelasService.delete(id);
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error("DELETE Kelas Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1,45 +1,15 @@
 import "./globals.css";
 import { AuthProvider } from "./lib/AuthContext";
-import { getSession } from "@/lib/auth";
-import prisma from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth-service";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata = {
-  title: "ElearningJamil - Portal",
-  description: "Platform eLearning",
+  title: "Elearning - MTs YPI Pulosari",
+  description: "Platform eLearning MTs YPI Pulosari",
 };
 
 export default async function RootLayout({ children }) {
-  const session = await getSession();
-  let user = null;
-
-  if (session) {
-    user = await prisma.user.findUnique({
-      where: { id: session.id },
-      include: {
-        studentProfile: true,
-        teacherProfile: {
-          include: {
-            mataPelajaran: true
-          }
-        },
-      }
-    });
-
-    if (user) {
-      // Tambahkan avatar default jika tidak ada di DB
-      user.avatar = `https://ui-avatars.com/api/?name=${user.name || user.username}&background=random`;
-      
-      // Map metadata for Sidebar & UI
-      if (user.role === "STUDENT" && user.studentProfile) {
-        user.kelas = user.studentProfile.kelas;
-        user.nisn = user.studentProfile.nisn;
-      } else if (user.role === "TEACHER" && user.teacherProfile) {
-        user.mapel = user.teacherProfile.mataPelajaran?.nama || "Belum ada Mapel";
-        user.nip = user.teacherProfile.nip;
-      }
-    }
-  }
+  const user = await getCurrentUser();
 
   return (
     <html lang="id">
@@ -52,7 +22,7 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body>
-        <AuthProvider initialUser={user} key={session?.id || 'guest'}>
+        <AuthProvider initialUser={user} key={user?.id || 'guest'}>
           {children}
           <Toaster />
         </AuthProvider>

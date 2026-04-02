@@ -25,6 +25,7 @@ import {
   School
 } from "lucide-react";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { createSiswaAction, updateSiswaAction, deleteSiswaAction } from "@/lib/actions/siswa-actions";
 
 const badge = (status) => {
   const isAktif = status === "Aktif";
@@ -92,20 +93,18 @@ export default function SiswaClient({ initialStudents, kelasList }) {
     
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/siswa/${studentToDelete}`, { method: 'DELETE' });
-      if (res.ok) {
+      const res = await deleteSiswaAction(studentToDelete);
+      if (res.success) {
         toast({
           title: "Berhasil!",
           description: "Data siswa telah berhasil dihapus dari sistem.",
           variant: "success",
         });
         setIsConfirmOpen(false);
-        router.refresh();
       } else {
-        const err = await res.json();
         toast({
           title: "Gagal Menghapus",
-          description: err.error || "Gagal menghapus data siswa.",
+          description: res.error || "Gagal menghapus data siswa.",
           variant: "destructive",
         });
       }
@@ -135,17 +134,12 @@ export default function SiswaClient({ initialStudents, kelasList }) {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
-    setIsSaving(true);
     try {
-      const method = editingSiswa ? 'PUT' : 'POST';
-      const url = editingSiswa ? `/api/siswa/${editingSiswa.id}` : '/api/siswa';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const res = editingSiswa 
+        ? await updateSiswaAction(editingSiswa.id, data)
+        : await createSiswaAction(data);
 
-      if (res.ok) {
+      if (res.success) {
         toast({
           title: "Berhasil!",
           description: editingSiswa ? "Data siswa telah diperbarui." : "Siswa berhasil didaftarkan ke sistem.",
@@ -154,12 +148,10 @@ export default function SiswaClient({ initialStudents, kelasList }) {
         setIsModalOpen(false);
         setEditingSiswa(null);
         setCurrentStep(1);
-        router.refresh();
       } else {
-        const err = await res.json();
         toast({
           title: "Gagal Menyimpan",
-          description: err.error || "Terjadi kesalahan pada server.",
+          description: res.error || "Terjadi kesalahan pada server.",
           variant: "destructive",
         });
       }

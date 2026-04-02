@@ -10,24 +10,24 @@ import { navConfig } from "@/app/lib/navConfig";
 const roleMeta = {
   siswa: {
     label: "Portal Siswa",
-    accent: "bg-teal",
-    accentLight: "bg-teal-light",
-    text: "text-teal",
-    border: "border-teal-light",
+    accent: "bg-indigo",
+    accentLight: "bg-indigo-light",
+    text: "text-indigo",
+    border: "border-indigo-border",
   },
   guru: {
     label: "Portal Guru",
     accent: "bg-indigo",
     accentLight: "bg-indigo-light",
     text: "text-indigo",
-    border: "border-indigo-light",
+    border: "border-indigo-border",
   },
   admin: {
     label: "Administrator",
-    accent: "bg-orange-500",
-    accentLight: "bg-orange-50",
-    text: "text-orange-600",
-    border: "border-orange-200",
+    accent: "bg-indigo",
+    accentLight: "bg-indigo-light",
+    text: "text-indigo",
+    border: "border-indigo-border",
   },
 };
 

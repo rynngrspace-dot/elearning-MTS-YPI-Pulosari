@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { createGuruAction, updateGuruAction, deleteGuruAction } from "@/lib/actions/guru-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -28,14 +29,15 @@ import {
   Phone,
   Mail,
   Info,
-  Briefcase
+  Briefcase,
+  UserRoundCheck
 } from "lucide-react";
 
 const badge = (status) => {
   const isPns = status === "PNS";
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-      isPns ? "bg-indigo-100 text-indigo-800 border border-indigo-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+      isPns ? "bg-indigo-100 text-indigo-800 border border-indigo-200" : "bg-indigo-100 text-indigo-800 border border-indigo-200"
     }`}>
       {status}
     </span>
@@ -93,20 +95,18 @@ export default function GuruClient({ initialTeachers, mapelList }) {
     
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/guru/${teacherToDelete}`, { method: 'DELETE' });
-      if (res.ok) {
+      const res = await deleteGuruAction(teacherToDelete);
+      if (res.success) {
         toast({
           title: "Data Dihapus",
           description: "Profil guru telah berhasil dihapus dari sistem.",
           variant: "success",
         });
         setIsConfirmOpen(false);
-        router.refresh();
       } else {
-        const err = await res.json();
         toast({
           title: "Gagal Menghapus",
-          description: err.error || "Terjadi kesalahan saat menghapus data.",
+          description: res.error || "Terjadi kesalahan saat menghapus data.",
           variant: "destructive",
         });
       }
@@ -172,17 +172,12 @@ export default function GuruClient({ initialTeachers, mapelList }) {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
-    setIsSaving(true);
     try {
-      const method = editingTeacher ? 'PUT' : 'POST';
-      const url = editingTeacher ? `/api/guru/${editingTeacher.id}` : '/api/guru';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const res = editingTeacher 
+        ? await updateGuruAction(editingTeacher.id, data)
+        : await createGuruAction(data);
 
-      if (res.ok) {
+      if (res.success) {
         toast({
           title: "Berhasil!",
           description: editingTeacher ? "Profil guru telah diperbarui." : "Registrasi guru berhasil dilakukan.",
@@ -191,12 +186,10 @@ export default function GuruClient({ initialTeachers, mapelList }) {
         setIsModalOpen(false);
         setEditingTeacher(null);
         setCurrentStep(1);
-        router.refresh();
       } else {
-        const err = await res.json();
         toast({
           title: "Gagal Menyimpan",
-          description: err.error || "Terjadi kesalahan pada server.",
+          description: res.error || "Terjadi kesalahan pada server.",
           variant: "destructive",
         });
       }
@@ -222,28 +215,38 @@ export default function GuruClient({ initialTeachers, mapelList }) {
     <>
       <div className="p-6 md:p-12 flex flex-col gap-10 animate-slideUp">
         <div className="flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h1 className="text-2xl font-black text-ink tracking-tight uppercase leading-none">Data Pengajar</h1>
-              <div className="h-1 w-20 bg-teal-500 mt-3 rounded-full" />
-              <p className="text-[11px] text-ink-3 font-bold uppercase tracking-widest mt-4">Manajemen Guru & Staff Akademik</p>
-            </div>
-            
-            <button className="flex items-center gap-2 px-6 py-3 bg-teal-500 text-white rounded-2xl text-[11px] font-black hover:bg-teal-600 transition-all shadow-xl shadow-teal-500/20 uppercase tracking-widest border border-white/10" onClick={() => openModal()}>
-              <Plus size={18} strokeWidth={3} />
-              Registrasi Guru
-            </button>
-          </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+           <div className="flex items-center gap-6">
+              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+                 <UserRoundCheck size={28} />
+              </div>
+              <div>
+                 <h1 className="text-3xl font-black text-ink tracking-tight uppercase leading-none">Data Pengajar</h1>
+                 <div className="text-[11px] text-ink-3 font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
+                    <div className="w-2 h-0.5 bg-indigo/40" /> Manajemen Guru & Staff Akademik
+                 </div>
+              </div>
+           </div>
+
+           <div className="flex items-center gap-3">
+              <button 
+                onClick={() => openModal()}
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+              >
+                <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Registrasi Guru
+              </button>
+           </div>
+        </div>
 
           <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1 group">
-                <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-teal-500 transition-colors" />
+                <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-indigo transition-colors" />
                 <input 
                   type="text" 
                   placeholder="CARI NAMA ATAU NIP..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-teal-500/10 transition-all"
+                  className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-indigo/10 transition-all"
                 />
               </div>
               
@@ -281,7 +284,7 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal group-hover:bg-teal group-hover:text-white transition-all text-xs font-black shadow-inner">
+                          <div className="w-10 h-10 rounded-2xl bg-indigo-light border border-indigo-light flex items-center justify-center text-teal group-hover:bg-teal group-hover:text-white transition-all text-xs font-black shadow-inner">
                             {guru.nama?.charAt(0)}
                           </div>
                           <div className="flex flex-col">
@@ -291,13 +294,13 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                         </div>
                       </td>
                       <td className="px-8 py-5">
-                        <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black rounded-xl border border-amber-100 uppercase tracking-widest">
+                        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-xl border border-indigo-100 uppercase tracking-widest">
                           {guru.mapel}
                         </span>
                       </td>
                       <td className="px-8 py-5">{badge(guru.status)}</td>
                       <td className="px-8 py-5 text-right space-x-2">
-                         <button onClick={() => setViewingTeacher(guru)} className="w-9 h-9 inline-flex items-center justify-center bg-teal-50 text-teal border border-teal-100 hover:bg-teal hover:text-white rounded-xl transition-all shadow-sm"><Eye size={16} strokeWidth={2.5}/></button>
+                         <button onClick={() => setViewingTeacher(guru)} className="w-9 h-9 inline-flex items-center justify-center bg-indigo-light text-teal border border-indigo-light hover:bg-teal hover:text-white rounded-xl transition-all shadow-sm"><Eye size={16} strokeWidth={2.5}/></button>
                          <button onClick={() => openModal(guru)} className="w-9 h-9 inline-flex items-center justify-center bg-indigo-50 text-indigo border border-indigo-100 hover:bg-indigo-500 hover:text-white rounded-xl transition-all shadow-sm"><Edit size={16} strokeWidth={2.5}/></button>
                          <button onClick={() => openDeleteConfirm(guru.id)} className="w-9 h-9 inline-flex items-center justify-center bg-red-50 text-red-400 border border-red-100 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm"><Trash2 size={16} strokeWidth={2.5}/></button>
                       </td>
@@ -314,13 +317,13 @@ export default function GuruClient({ initialTeachers, mapelList }) {
         <div className="fixed inset-0 z-100 flex items-center justify-center p-6 lg:p-10">
           <div className="absolute inset-0 bg-ink/60 backdrop-blur-xl" onClick={() => setViewingTeacher(null)} />
           <div className="relative bg-surface w-full max-w-2xl rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
-            <div className="h-40 bg-linear-to-br from-teal-500 to-teal-700 relative shrink-0">
+            <div className="h-40 bg-linear-to-br from-indigo to-teal-700 relative shrink-0">
                <button onClick={() => setViewingTeacher(null)} className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/30 text-white rounded-full transition-all z-20 border border-white/10">
                   <X size={20} strokeWidth={2.5}/>
                </button>
                <div className="absolute -bottom-14 left-12 group">
                   <div className="w-32 h-32 rounded-[40px] bg-white p-2 shadow-2xl transition-transform group-hover:scale-105 duration-500">
-                     <div className="w-full h-full rounded-[34px] bg-teal-50 flex items-center justify-center text-teal shadow-inner border border-teal/5 relative overflow-hidden">
+                     <div className="w-full h-full rounded-[34px] bg-indigo-light flex items-center justify-center text-teal shadow-inner border border-teal/5 relative overflow-hidden">
                         <User size={56} strokeWidth={1} className="relative z-10" />
                         <div className="absolute inset-0 bg-linear-to-tr from-teal/10 to-transparent" />
                      </div>
@@ -388,9 +391,9 @@ export default function GuruClient({ initialTeachers, mapelList }) {
         <div className="fixed inset-0 z-100 flex items-center justify-center p-6 lg:p-10">
           <div className="absolute inset-0 bg-ink/60 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-surface w-full max-w-lg rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
-            <div className="p-10 border-b border-border bg-teal-50/30 flex items-center justify-between">
+            <div className="p-10 border-b border-border bg-indigo-light/30 flex items-center justify-between">
                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-[22px] bg-teal-500/10 flex items-center justify-center text-teal-600 border border-teal-500/5 shadow-inner">
+                  <div className="w-14 h-14 rounded-[22px] bg-indigo/10 flex items-center justify-center text-indigo-hover border border-indigo/5 shadow-inner">
                      <Contact2 size={24} strokeWidth={3} />
                   </div>
                   <div>
@@ -452,11 +455,11 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                      <button key="guru-btn-back" type="button" onClick={() => setCurrentStep(1)} className="flex-1 py-4.5 border border-border rounded-3xl text-[11px] font-black text-ink-3 hover:bg-cream transition-all uppercase tracking-widest active:scale-95 disabled:opacity-50" disabled={isSaving}>Kembali</button>
                   )}
                   {currentStep < totalSteps ? (
-                     <button key="guru-btn-next" type="button" onClick={handleNext} className="flex-2 py-4.5 bg-teal-500 text-white rounded-3xl text-[11px] font-black shadow-xl shadow-teal-500/20 hover:bg-teal-600 transition-all uppercase tracking-widest border border-white/10 active:scale-95">
+                     <button key="guru-btn-next" type="button" onClick={handleNext} className="flex-2 py-4.5 bg-indigo text-white rounded-3xl text-[11px] font-black shadow-xl shadow-indigo/20 hover:bg-indigo-hover transition-all uppercase tracking-widest border border-white/10 active:scale-95">
                         Langkah Berikutnya
                      </button>
                   ) : (
-                     <button key="guru-btn-submit" type="submit" className="flex-2 py-4.5 bg-teal-600 text-white rounded-3xl text-[11px] font-black shadow-xl shadow-teal-600/20 hover:bg-teal-700 transition-all uppercase tracking-widest border border-white/10 active:scale-95 disabled:bg-teal-600/50" disabled={isSaving}>
+                     <button key="guru-btn-submit" type="submit" className="flex-2 py-4.5 bg-indigo-hover text-white rounded-3xl text-[11px] font-black shadow-xl shadow-indigo-hover/20 hover:bg-teal-700 transition-all uppercase tracking-widest border border-white/10 active:scale-95 disabled:bg-indigo-hover/50" disabled={isSaving}>
                         {isSaving ? "Sedang Menyimpan..." : "Simpan Guru"}
                      </button>
                   )}

@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import { createPengampuAction, updatePengampuBulkAction, deletePengampuAction } from "@/lib/actions/pengampu-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -40,7 +41,10 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
+  // Search/Filter logic for the table
   const filteredData = useMemo(() => {
     return data.filter(a => 
       a.teacher.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -48,63 +52,105 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
       a.kelas.nama.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [data, searchTerm]);
+
+  // Group by Teacher for Table display
+  const groupedData = useMemo(() => {
+    const groups = filteredData.reduce((acc, current) => {
+      const tId = current.teacherId;
+      if (!acc[tId]) {
+        acc[tId] = {
+          teacher: current.teacher,
+          assignments: []
+        };
+      }
+      acc[tId].assignments.push(current);
+      return acc;
+    }, {});
+
+    return Object.values(groups).sort((a, b) => 
+      a.teacher.user.name.localeCompare(b.teacher.user.name)
+    );
+  }, [filteredData]);
+
+  // Bulk Modal State for Editing
+  const [modalAssignments, setModalAssignments] = useState([]);
+
+  // Sync selectedTeacherId and modalAssignments
+  useEffect(() => {
+    if (isModalOpen) {
+      if (editingAssignment) {
+        setSelectedTeacherId(editingAssignment.teacherId);
+        // Find ALL assignments for this specific teacher
+        const teacherAssignments = data.filter(a => a.teacherId === editingAssignment.teacherId);
+        setModalAssignments(teacherAssignments.map(a => ({
+          id: a.id,
+          mapelId: a.mapelId,
+          kelasId: a.kelasId,
+          hari: a.hari || "",
+          jamMulai: a.jamMulai || "",
+          jamSelesai: a.jamSelesai || ""
+        })));
+      } else {
+        setSelectedTeacherId("");
+        setModalAssignments([]);
+      }
+    }
+  }, [isModalOpen, editingAssignment, data]);
+
+  const updateModalRow = (id, field, value) => {
+    setModalAssignments(modalAssignments.map(a => a.id === id ? { ...a, [field]: value } : a));
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setFormErrors({});
-
-    const formData = new FormData(e.target);
-    const body = Object.fromEntries(formData.entries());
-
-    // Validation
-    let errors = {};
-    if (!body.teacherId) errors.teacherId = "Mohon pilih guru";
-    if (!body.mapelId) errors.mapelId = "Mohon pilih mata pelajaran";
-    if (!body.kelasId) errors.kelasId = "Mohon pilih kelas";
-
-    if (Object.keys(errors).length > 0) {
-       setFormErrors(errors);
-       toast({
-         title: "Data Belum Lengkap",
-         description: "Semua kolom pilihan wajib diisi.",
-         variant: "destructive",
-       });
-       return;
-    }
-
     setIsSaving(true);
-    try {
-      const method = editingAssignment ? 'PUT' : 'POST';
-      const url = editingAssignment ? `/api/pengampu/${editingAssignment.id}` : '/api/pengampu';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
 
-      if (res.ok) {
-        toast({
-          title: "Berhasil!",
-          description: "Penugasan pengampu telah berhasil disimpan.",
-          variant: "success",
-        });
-        setIsModalOpen(false);
-        setEditingAssignment(null);
-        router.refresh();
+    try {
+      if (editingAssignment) {
+        // Mode Edit: Bulk Update for the teacher
+        const res = await updatePengampuBulkAction(modalAssignments);
+        if (res.success) {
+          toast({ title: "Penugasan Berhasil Diperbarui", variant: "success" });
+          setIsModalOpen(false);
+          setEditingAssignment(null);
+        } else {
+          toast({ title: "Gagal Menyimpan", description: res.error, variant: "destructive" });
+        }
       } else {
-        const err = await res.json();
-        toast({
-          title: "Gagal Menyimpan",
-          description: err.error || "Penugasan mungkin sudah ada (duplikat).",
-          variant: "destructive",
-        });
+        // Mode Tambah: Standard Single Creation
+        const formData = new FormData(e.target);
+        const body = Object.fromEntries(formData.entries());
+        
+        let errors = {};
+        if (!body.teacherId) errors.teacherId = "Mohon pilih guru";
+        if (!body.mapelId) errors.mapelId = "Mohon pilih mata pelajaran";
+        if (!body.kelasId) errors.kelasId = "Mohon pilih kelas";
+
+        if (Object.keys(errors).length > 0) {
+           setFormErrors(errors);
+           setIsSaving(false);
+           return;
+        }
+
+        const payload = {
+          ...body,
+          hari: body.hari || null,
+          jamMulai: body.jamMulai || null,
+          jamSelesai: body.jamSelesai || null,
+        };
+
+        const res = await createPengampuAction(payload);
+        if (res.success) {
+          toast({ title: "Penugasan Berhasil Dibuat", variant: "success" });
+          setIsModalOpen(false);
+        } else {
+          toast({ title: "Gagal Menyimpan", description: res.error, variant: "destructive" });
+        }
       }
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Kesalahan Koneksi",
-        description: "Tidak dapat terhubung ke server.",
-        variant: "destructive",
-      });
+      toast({ title: "Kesalahan Koneksi", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -112,33 +158,32 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
   const handleDelete = async () => {
     if (!assignmentToDelete) return;
-
     setIsDeleting(true);
+
     try {
-      const res = await fetch(`/api/pengampu/${assignmentToDelete}`, { method: 'DELETE' });
-      if (res.ok) {
+      const res = await deletePengampuAction(assignmentToDelete);
+      if (res.success) {
         toast({
           title: "Penugasan Dihapus",
-          description: "Data penugasan pengampu telah berhasil dihapus.",
+          description: "Data telah berhasil dihapus.",
           variant: "success",
         });
         setIsConfirmOpen(false);
-        router.refresh();
+        
+        // If we were in the modal, remove it from the list
+        setModalAssignments(prev => prev.filter(a => a.id !== assignmentToDelete));
+        
+        // If no more assignments for this teacher in the modal, close it
+        if (editingAssignment && modalAssignments.length <= 1) {
+          setIsModalOpen(false);
+          setEditingAssignment(null);
+        }
       } else {
-        const err = await res.json();
-        toast({
-          title: "Gagal Menghapus",
-          description: err.error || "Terjadi kesalahan saat menghapus data.",
-          variant: "destructive",
-        });
+        toast({ title: "Gagal Menghapus", description: res.error, variant: "destructive" });
       }
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Kesalahan Koneksi",
-        description: "Tidak dapat terhubung ke server.",
-        variant: "destructive",
-      });
+      toast({ title: "Kesalahan Koneksi", variant: "destructive" });
     } finally {
       setIsDeleting(false);
       setAssignmentToDelete(null);
@@ -150,82 +195,127 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
     setIsConfirmOpen(true);
   };
 
+  const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
   return (
     <>
       <div className="p-6 md:p-12 flex flex-col gap-10 animate-slideUp">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h1 className="text-2xl font-black text-ink tracking-tight uppercase leading-none">Penugasan Pengampu</h1>
-              <div className="h-1 w-20 bg-emerald-500 mt-3 rounded-full" />
-              <p className="text-[11px] text-ink-3 font-bold uppercase tracking-widest mt-4">Atur Jadwal & Guru Mata Pelajaran</p>
+            <div className="flex items-center gap-6">
+              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+                <Briefcase size={28} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-black text-ink tracking-tight uppercase leading-none">Penugasan Pengampu</h1>
+                <div className="text-[11px] text-ink-3 font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
+                  <div className="w-2 h-0.5 bg-indigo/40" /> Manajemen Penjadwalan Guru
+                </div>
+              </div>
             </div>
-            
-            <button className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl text-[11px] font-black hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 uppercase tracking-widest border border-white/10" onClick={() => { setEditingAssignment(null); setIsModalOpen(true); }}>
-              <Plus size={18} strokeWidth={3} />
-              Tambah Pengampu
-            </button>
+
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => { setEditingAssignment(null); setIsModalOpen(true); }}
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+              >
+                <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Penugasan
+              </button>
+            </div>
           </div>
 
           <div className="relative group">
-            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-emerald-500 transition-colors" />
+            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-indigo transition-colors" />
             <input 
               type="text" 
               placeholder="CARI GURU, MAPEL, ATAU KELAS..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
+              className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-indigo/10 transition-all"
             />
           </div>
         </div>
 
         <div className="bg-surface border border-border rounded-[40px] overflow-hidden shadow-card p-2">
-            <div className="overflow-x-auto rounded-[32px]">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-cream/40">
-                  <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Tahun Ajaran</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Guru Pengampu</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Mata Pelajaran</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Unit Kelas</th>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-right">Opsi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {filteredData.map((a) => (
-                    <tr key={a.id} className="hover:bg-cream/20 transition-all group">
-                      <td className="px-8 py-5">
-                         <div className="flex items-center gap-2 text-[11px] font-black text-ink uppercase tracking-tighter">
-                            <CalendarClock size={14} className="text-emerald-500" />
-                            {a.tahunAjaran.tahun} ({a.tahunAjaran.semester})
-                         </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-2xl bg-indigo/5 border border-indigo/10 flex items-center justify-center text-indigo group-hover:bg-indigo group-hover:text-white transition-all text-xs font-black shadow-inner uppercase">
-                            {a.teacher.user.name?.charAt(0)}
+          <div className="overflow-x-auto rounded-[32px]">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-cream/40">
+                <tr>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Guru Pengampu</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Detail Penugasan (Mapel, Kelas, Jadwal)</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {groupedData.map((group) => (
+                  <tr key={group.teacher.id} className="hover:bg-cream/10 transition-all">
+                    <td className="px-8 py-6 align-top w-[260px] border-r border-border/50 bg-indigo-50/5">
+                      <div className="flex flex-col">
+                        <span className="text-[13px] font-black text-ink uppercase tracking-tight block leading-none">{group.teacher.user.name}</span>
+                        <span className="text-[9px] font-bold text-ink-3 uppercase tracking-widest mt-2 block opacity-50">NIP. {group.teacher.nip || "---"}</span>
+                      </div>
+                    </td>
+                    <td className="p-0">
+                      <div className="flex flex-col">
+                        {group.assignments.map((a, idx) => (
+                          <div 
+                            key={a.id} 
+                            className={cn(
+                              "flex items-center justify-between px-8 py-3.5 group/item transition-colors",
+                              idx !== group.assignments.length - 1 ? "border-b border-border/20" : ""
+                            )}
+                          >
+                            <div className="grid grid-cols-3 gap-6 flex-1 items-center">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-indigo/5 flex items-center justify-center text-indigo shrink-0">
+                                  <BookMarked size={12} />
+                                </div>
+                                <p className="text-[11px] font-black text-ink uppercase leading-none truncate">{a.mapel.nama}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-indigo/5 flex items-center justify-center text-indigo shrink-0">
+                                  <School size={12} />
+                                </div>
+                                <p className="text-[11px] font-bold text-ink uppercase leading-none truncate">{a.kelas.nama}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-md bg-indigo/5 flex items-center justify-center text-indigo shrink-0">
+                                  <CalendarClock size={12} />
+                                </div>
+                                {a.hari ? (
+                                  <p className="text-[11px] font-bold text-ink-3 uppercase tracking-tighter leading-none">
+                                    <span className="font-black text-indigo">{a.hari}</span> {a.jamMulai}-{a.jamSelesai}
+                                  </p>
+                                ) : (
+                                  <p className="text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-30 italic">No Schedule</p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[14px] font-black text-ink uppercase tracking-tight">{a.teacher.user.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-xl border border-emerald-100 uppercase tracking-widest">
-                          {a.mapel.nama}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black rounded-xl border border-amber-100 uppercase tracking-widest">
-                          {a.kelas.nama}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right space-x-1">
-                         <button onClick={() => openDeleteConfirm(a.id)} className="w-9 h-9 inline-flex items-center justify-center bg-red-50 text-red-400 border border-red-100 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm"><Trash2 size={16} strokeWidth={2.5}/></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 w-[80px]">
+                      <button 
+                        onClick={() => { setEditingAssignment(group.assignments[0]); setIsModalOpen(true); }}
+                        className="w-8 h-8 flex items-center justify-center bg-indigo text-white rounded-lg shadow-lg shadow-indigo/10 hover:bg-indigo-600 transition-all hover:scale-110 active:scale-95"
+                        title="Edit Semua Jadwal Guru"
+                      >
+                        <Edit size={14} strokeWidth={3} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {groupedData.length === 0 && (
+                  <tr>
+                    <td colSpan="3" className="px-8 py-20 text-center text-ink-3 font-bold uppercase tracking-[0.2em] opacity-40">
+                      Data penugasan tidak ditemukan
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -233,64 +323,188 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
       {isModalOpen && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-6 sm:p-10">
           <div className="absolute inset-0 bg-ink/60 backdrop-blur-md animate-fadeIn" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-surface w-full max-w-lg rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
-            <div className="p-10 border-b border-border bg-emerald-50/30 flex items-center justify-between">
-               <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-[22px] bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/5 shadow-inner">
-                     <Briefcase size={24} strokeWidth={3} />
-                  </div>
-                  <div>
-                     <h2 className="text-xl font-black text-ink uppercase tracking-tight leading-none">Penugasan Guru</h2>
-                     <p className="text-[10px] font-black text-ink-3 mt-3 uppercase tracking-widest opacity-60">Input Pemetaan Pengampu</p>
-                  </div>
-               </div>
-               <button onClick={() => setIsModalOpen(false)} className="text-ink-3 hover:text-ink"><X size={20} /></button>
+          <div className="relative bg-surface w-full max-w-2xl rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp max-h-[90vh]">
+            <div className="p-8 border-b border-border bg-indigo-50/30 flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 rounded-[20px] bg-indigo/10 flex items-center justify-center text-indigo-600 border border-indigo/5 shadow-inner">
+                  <CalendarClock size={22} strokeWidth={3} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-ink uppercase tracking-tight leading-none">
+                    {editingAssignment ? "Atur Jadwal Mengajar" : "Tambah Penugasan Baru"}
+                  </h2>
+                  <p className="text-[10px] font-black text-ink-3 mt-2 uppercase tracking-widest opacity-60">
+                    {editingAssignment ? editingAssignment.teacher.user.name : "Manajemen Pengampu"}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-border rounded-full text-ink-3 hover:text-ink"><X size={18} /></button>
             </div>
 
-            <form onSubmit={handleSave} className="p-10 flex flex-col gap-6">
-               <div className="flex flex-col gap-2.5">
-                  <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Pilih Guru</label>
-                  <select name="teacherId" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.teacherId ? "border-red-500 bg-red-50/10" : "border-border")}>
-                     <option value="">CARI NAMA GURU</option>
-                     {teachers.map(t => <option key={t.id} value={t.id}>{t.user.name}</option>)}
-                  </select>
-                  {formErrors.teacherId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.teacherId}</p>}
-               </div>
+            <form onSubmit={handleSave} className="flex flex-col h-full overflow-hidden">
+              <div className="p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
+                {editingAssignment ? (
+                  /* MODE EDIT JADWAL: Tampilkan list mapel yang diampu */
+                  <div className="flex flex-col gap-6">
+                    {modalAssignments.map((a) => (
+                      <div key={a.id} className="p-6 bg-cream/10 border border-border/60 rounded-[32px] relative group/item shadow-sm hover:border-indigo/30 transition-all">
+                        <div className="flex items-center justify-between mb-6">
+                           <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-indigo text-white flex items-center justify-center">
+                                 <BookMarked size={14} />
+                              </div>
+                              <h4 className="text-[12px] font-black text-ink uppercase tracking-tight">Edit Penugasan</h4>
+                           </div>
+                           <button 
+                             type="button" 
+                             onClick={() => openDeleteConfirm(a.id)}
+                             className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-60 hover:opacity-100"
+                             title="Hapus Penugasan Ini"
+                           >
+                             <Trash2 size={16} />
+                           </button>
+                        </div>
 
-               <div className="grid grid-cols-2 gap-5">
-                  <div className="flex flex-col gap-2.5">
-                     <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Mata Pelajaran</label>
-                     <select name="mapelId" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.mapelId ? "border-red-500 bg-red-50/10" : "border-border")}>
-                        <option value="">PILIH MAPEL</option>
-                        {mapels.map(m => <option key={m.id} value={m.id}>{m.nama}</option>)}
-                     </select>
-                     {formErrors.mapelId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.mapelId}</p>}
+                        <div className="grid grid-cols-2 gap-4 mb-5">
+                           <div className="flex flex-col gap-2">
+                              <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Mata Pelajaran</label>
+                              <select 
+                                value={a.mapelId} 
+                                onChange={(e) => updateModalRow(a.id, "mapelId", e.target.value)}
+                                className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all"
+                              >
+                                 <option value="">PILIH MAPEL</option>
+                                 {mapels.map(m => <option key={m.id} value={m.id}>{m.nama}</option>)}
+                              </select>
+                           </div>
+                           <div className="flex flex-col gap-2">
+                              <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Unit Kelas</label>
+                              <select 
+                                value={a.kelasId} 
+                                onChange={(e) => updateModalRow(a.id, "kelasId", e.target.value)}
+                                className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all"
+                              >
+                                 {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                              </select>
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Hari</label>
+                            <select 
+                              value={a.hari} 
+                              onChange={(e) => updateModalRow(a.id, "hari", e.target.value)}
+                              className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all"
+                            >
+                              <option value="">PILIH HARI</option>
+                              {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Mulai</label>
+                            <input 
+                              type="time" 
+                              value={a.jamMulai} 
+                              onChange={(e) => updateModalRow(a.id, "jamMulai", e.target.value)}
+                              className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all" 
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Selesai</label>
+                            <input 
+                              type="time" 
+                              value={a.jamSelesai} 
+                              onChange={(e) => updateModalRow(a.id, "jamSelesai", e.target.value)}
+                              className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all" 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex flex-col gap-2.5">
-                     <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Unit Kelas</label>
-                     <select name="kelasId" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.kelasId ? "border-red-500 bg-red-50/10" : "border-border")}>
-                        <option value="">PILIH KELAS</option>
-                        {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                     </select>
-                     {formErrors.kelasId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.kelasId}</p>}
+                ) : (
+                  /* MODE TAMBAH: Pilihan tunggal guru & mappel */
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-2.5">
+                      <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Pilih Guru</label>
+                      <select 
+                        value={selectedTeacherId} 
+                        name="teacherId" 
+                        onChange={(e) => {
+                          const tId = e.target.value;
+                          setSelectedTeacherId(tId);
+                        }}
+                        className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.teacherId ? "border-red-500 bg-red-50/10" : "border-border")}
+                      >
+                        <option value="">CARI NAMA GURU</option>
+                        {teachers.map(t => <option key={t.id} value={t.id}>{t.user.name}</option>)}
+                      </select>
+                      {formErrors.teacherId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2">{formErrors.teacherId}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="flex flex-col gap-2.5">
+                        <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Mata Pelajaran</label>
+                        <select 
+                          name="mapelId" 
+                          className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.mapelId ? "border-red-500 bg-red-50/10" : "border-border")}
+                        >
+                          <option value="">PILIH MAPEL</option>
+                          {mapels.map(m => <option key={m.id} value={m.id}>{m.nama}</option>)}
+                        </select>
+                        {formErrors.mapelId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2">{formErrors.mapelId}</p>}
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                        <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Unit Kelas</label>
+                        <select name="kelasId" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.kelasId ? "border-red-500 bg-red-50/10" : "border-border")}>
+                          <option value="">PILIH KELAS</option>
+                          {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                        </select>
+                        {formErrors.kelasId && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2">{formErrors.kelasId}</p>}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
+                      <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Tahun Ajaran Aktif</label>
+                      <select name="tahunAjaranId" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all">
+                        {academics.map(a => <option key={a.id} value={a.id}>{a.tahun} ({a.semester}) {a.isActive ? '- AKTIF' : ''}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-5">
+                      <div className="flex flex-col gap-2.5">
+                        <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Hari</label>
+                        <select name="hari" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all">
+                          <option value="">PILIH HARI</option>
+                          {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                        <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Mulai</label>
+                        <input name="jamMulai" type="time" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all" />
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                        <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Selesai</label>
+                        <input name="jamSelesai" type="time" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all" />
+                      </div>
+                    </div>
                   </div>
-               </div>
+                )}
+              </div>
 
-               <div className="flex flex-col gap-2.5">
-                  <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Tahun Ajaran Aktif</label>
-                  <select name="tahunAjaranId" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all">
-                     {academics.map(a => <option key={a.id} value={a.id}>{a.tahun} ({a.semester}) {a.isActive ? '- AKTIF' : ''}</option>)}
-                  </select>
-               </div>
-
-               <div className="p-6 bg-emerald-50/50 border border-emerald-200 rounded-[30px] flex gap-4">
-                  <Info size={20} className="text-emerald-600 shrink-0" />
-                  <p className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider leading-relaxed">
-                     Satu guru dapat mengampu beberapa mata pelajaran di kelas yang berbeda. Gunakan <span className="font-black italic">Tahun Ajaran</span> yang sesuai.
-                  </p>
-               </div>
-
-               <button type="submit" className="w-full mt-2 py-4.5 bg-emerald-500 text-white rounded-3xl text-[11px] font-black shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all uppercase tracking-widest border border-white/10">Publish Penugasan</button>
+              <div className="p-8 border-t border-border bg-cream/5">
+                <button 
+                  type="submit" 
+                  disabled={isSaving}
+                  className="w-full py-5 bg-indigo text-white rounded-[24px] text-[12px] font-black uppercase tracking-widest shadow-xl shadow-indigo/20 hover:bg-indigo-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                >
+                  {isSaving ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : null}
+                  {isSaving ? "SEDANG MENYIMPAN..." : editingAssignment ? "Simpan Perubahan Jadwal" : "Publish Penugasan"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -299,7 +513,12 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
       <style jsx>{`
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-slideUp { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
       `}</style>
+
       {/* CONFIRMATION MODAL */}
       <ConfirmModal 
         isOpen={isConfirmOpen}
