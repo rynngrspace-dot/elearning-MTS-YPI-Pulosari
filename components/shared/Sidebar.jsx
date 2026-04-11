@@ -218,7 +218,7 @@ export default function Sidebar({ open, close }) {
 
               return (
                 <Link
-                  key={href}
+                  key={label}
                   href={href}
                   onClick={close}
                   className={`flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13.5px] transition-colors
