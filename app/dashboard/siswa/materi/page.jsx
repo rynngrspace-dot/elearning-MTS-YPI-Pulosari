@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo } from "react";
 import { Download, Eye, Search, BookOpen, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";

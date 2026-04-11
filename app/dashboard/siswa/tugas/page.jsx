@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo } from "react";
 import {
   Upload,
@@ -12,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getStudentTugasPageAction, submitTugasAction } from "@/lib/actions/siswa-actions";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 const statusCfg = {
   belum: {
@@ -101,13 +103,21 @@ export default function TugasPage() {
     });
 
     if (res.success) {
-      toast.success("Tugas berhasil dikumpulkan!");
+      toast({
+        title: "Berhasil",
+        description: "Tugas berhasil dikumpulkan!",
+        variant: "success"
+      });
       fetchTugas(); // Refresh data
       setSelected(null);
       setFile(null);
       setCatatan("");
     } else {
-      toast.error(res.error || "Gagal mengumpulkan tugas");
+      toast({
+        title: "Gagal",
+        description: res.error || "Gagal mengumpulkan tugas",
+        variant: "destructive"
+      });
     }
     setSubmitting(false);
   };
