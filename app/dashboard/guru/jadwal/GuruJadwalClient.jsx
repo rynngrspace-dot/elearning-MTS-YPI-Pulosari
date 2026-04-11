@@ -40,82 +40,73 @@ export default function GuruJadwalClient({ initialSchedule }) {
         </div>
       </div>
 
-      {/* TABLE SECTION */}
-      <div className="bg-surface border border-border rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-zinc-50 border-b border-border">
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] w-16">No</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] w-32">Hari</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em]">Mata Pelajaran</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-center">Kelas</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-center">Waktu</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-center">Siswa</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {sortedSchedule.length > 0 ? sortedSchedule.map((item, idx) => (
-                <tr key={idx} className="group hover:bg-indigo-light/20 transition-colors">
-                  <td className="px-6 py-4 text-[12px] tabular-nums font-bold text-ink-3 opacity-40">
-                    {(idx + 1).toString().padStart(2, '0')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={cn(
-                      "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
-                      item.hari === "Senin" ? "bg-red-50 text-red-600" :
-                      item.hari === "Selasa" ? "bg-amber-50 text-amber-600" :
-                      item.hari === "Rabu" ? "bg-green-50 text-green-600" :
-                      item.hari === "Kamis" ? "bg-blue-50 text-blue-600" :
-                      item.hari === "Jumat" ? "bg-indigo-light text-indigo" :
-                      "bg-zinc-100 text-zinc-600"
-                    )}>
-                      {item.hari}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <p className="text-[14px] font-bold text-ink tracking-tight uppercase group-hover:text-indigo transition-colors">{item.mapel}</p>
-                      <p className="text-[10px] text-ink-3 font-medium opacity-60">Sesi Belajar Aktif</p>
+      {/* SCHEDULE LIST GROUPED BY DAY */}
+      <div className="flex flex-col gap-10">
+        {Object.keys(dayOrder).map((dayName) => {
+          const sessionsForDay = sortedSchedule.filter(s => s.hari === dayName);
+          if (sessionsForDay.length === 0) return null;
+
+          return (
+            <div key={dayName} className="flex flex-col gap-4">
+              {/* Day Label Separator */}
+              <div className="flex items-center gap-4 px-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
+                <h2 className={cn(
+                  "text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border shadow-sm transition-all",
+                  dayName === "Senin" ? "bg-red-50 text-red-600 border-red-100" :
+                  dayName === "Selasa" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                  dayName === "Rabu" ? "bg-green-50 text-green-600 border-green-100" :
+                  dayName === "Kamis" ? "bg-blue-50 text-blue-600 border-blue-100" :
+                  dayName === "Jumat" ? "bg-indigo-light text-indigo border-indigo/10" :
+                  "bg-zinc-50 text-zinc-600 border-zinc-200"
+                )}>
+                  HARI {dayName}
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent opacity-50" />
+              </div>
+
+              {/* Day Sessions List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sessionsForDay.map((item, idx) => (
+                  <div key={idx} className="bg-white border border-border rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo/20 transition-all group overflow-hidden relative">
+                    {/* Time Badge - Top Right */}
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-zinc-50 border-bl border-border rounded-bl-xl text-[9px] font-bold text-ink-3 tabular-nums group-hover:bg-indigo group-hover:text-white transition-colors">
+                      {item.jamMulai} - {item.jamSelesai}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="inline-flex items-center justify-center px-4 py-1.5 bg-zinc-100 border border-border rounded-xl text-[12px] font-black text-ink-2 group-hover:bg-indigo group-hover:text-white transition-all shadow-sm">
-                      {item.kelas}
+
+                    <div className="flex items-start gap-4 mb-5">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-light flex items-center justify-center text-indigo shadow-inner group-hover:scale-110 transition-transform duration-300">
+                        <Clock size={18} />
+                      </div>
+                      <div className="flex flex-col gap-1 pr-12">
+                        <h4 className="text-[14px] font-bold text-ink uppercase tracking-tight group-hover:text-indigo transition-colors line-clamp-1">
+                          {item.mapel}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-60">
+                           <School size={12} className="text-indigo/60" /> Kelas {item.kelas}
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock size={14} className="text-ink-3 opacity-30" />
-                      <span className="text-[13px] font-bold text-ink tabular-nums">
-                        {item.jamMulai} - {item.jamSelesai}
-                      </span>
+
+                    <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[9px] font-black text-ink-3 uppercase tracking-widest opacity-70">
+                        <Users size={12} className="text-indigo/40" /> {item.siswa} SISWA
+                      </div>
+                      <div className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Users size={14} className="text-ink-3 opacity-30" />
-                      <span className="text-[12px] font-bold text-ink-2 underline decoration-indigo/20 underline-offset-4">{item.siswa}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="inline-flex h-2 w-2 rounded-full bg-green-500 ring-4 ring-green-100/50" />
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-24 text-center">
-                    <div className="flex flex-col items-center justify-center opacity-20 grayscale">
-                      <CalendarClock size={48} className="mb-4" />
-                      <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada jadwal mengajar yang terpetakan</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {sortedSchedule.length === 0 && (
+          <div className="py-24 flex flex-col items-center justify-center text-center opacity-20 grayscale border-2 border-dashed border-border rounded-3xl">
+            <CalendarClock size={48} className="mb-4" />
+            <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada jadwal mengajar yang terdaftar</p>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
