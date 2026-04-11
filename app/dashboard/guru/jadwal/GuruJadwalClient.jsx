@@ -48,11 +48,10 @@ export default function GuruJadwalClient({ initialSchedule }) {
 
           return (
             <div key={dayName} className="flex flex-col gap-4">
-              {/* Day Label Separator */}
-              <div className="flex items-center gap-4 px-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent opacity-50" />
+              {/* Day Label - Left Aligned */}
+              <div className="flex items-center gap-3 px-2">
                 <h2 className={cn(
-                  "text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border shadow-sm transition-all",
+                  "text-[11px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-xl border transition-all",
                   dayName === "Senin" ? "bg-red-50 text-red-600 border-red-100" :
                   dayName === "Selasa" ? "bg-amber-50 text-amber-600 border-amber-100" :
                   dayName === "Rabu" ? "bg-green-50 text-green-600 border-green-100" :
@@ -62,15 +61,15 @@ export default function GuruJadwalClient({ initialSchedule }) {
                 )}>
                   HARI {dayName}
                 </h2>
-                <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent opacity-50" />
+                <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent opacity-30" />
               </div>
 
               {/* Day Sessions List */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sessionsForDay.map((item, idx) => (
-                  <div key={idx} className="bg-white border border-border rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo/20 transition-all group overflow-hidden relative">
+                  <div key={idx} className="bg-white border border-border/60 rounded-2xl p-5 hover:border-indigo/30 transition-all group overflow-hidden relative">
                     {/* Time Badge - Top Right */}
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-zinc-50 border-bl border-border rounded-bl-xl text-[9px] font-bold text-ink-3 tabular-nums group-hover:bg-indigo group-hover:text-white transition-colors">
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-zinc-50 border-bl border-border/40 rounded-bl-xl text-[9px] font-bold text-ink-3 tabular-nums group-hover:bg-indigo group-hover:text-white transition-colors">
                       {item.jamMulai} - {item.jamSelesai}
                     </div>
 
