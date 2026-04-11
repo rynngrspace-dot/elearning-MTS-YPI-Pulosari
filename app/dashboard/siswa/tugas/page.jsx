@@ -55,6 +55,7 @@ export default function TugasPage() {
   const mapelIdFilter = searchParams.get("id");
 
   const [data, setData] = useState([]);
+  const [subjectName, setSubjectName] = useState("");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState({});
   const [selected, setSelected] = useState(null);
@@ -62,11 +63,18 @@ export default function TugasPage() {
   const [catatan, setCatatan] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchTugas = async () => {
+  const fetchData = async () => {
     if (user?.studentId && user?.kelasId) {
+      // Fetch tasks
       const res = await getStudentTugasPageAction(user.studentId, user.kelasId);
-      if (res.success) {
-        setData(res.data);
+      if (res.success) setData(res.data);
+
+      // Fetch subject name if strictly filtered
+      if (mapelIdFilter) {
+        const sRes = await getSubjectDetailAction(user.kelasId, mapelIdFilter);
+        if (sRes.success && sRes.data) {
+           setSubjectName(sRes.data.mapel.nama);
+        }
       }
     }
     setLoading(false);
@@ -74,14 +82,14 @@ export default function TugasPage() {
 
   useEffect(() => {
     if (user) {
-      fetchTugas();
+      fetchData();
     }
-  }, [user]);
+  }, [user, mapelIdFilter]);
 
   // Handle Mapel filter from URL
   useEffect(() => {
     if (mapelIdFilter && data.length > 0) {
-        setOpen({}); // Close other accordions
+        setOpen({}); // Reset all
         const target = data.find(t => t.mapelId === mapelIdFilter);
         if (target) {
             setOpen({ [target.mapel.nama]: true });
@@ -112,11 +120,11 @@ export default function TugasPage() {
 
   // Header Title with Mapel Name
   const currentMapelName = useMemo(() => {
-    if (mapelIdFilter && data.length > 0) {
-      return data.find(t => t.mapelId === mapelIdFilter)?.mapel.nama || "";
+    if (mapelIdFilter) {
+      return subjectName || data.find(t => t.mapelId === mapelIdFilter)?.mapel.nama || "";
     }
     return "";
-  }, [mapelIdFilter, data]);
+  }, [mapelIdFilter, subjectName, data]);
 
   const handleSubmit = async () => {
     if (!selected || !user?.studentId) return;

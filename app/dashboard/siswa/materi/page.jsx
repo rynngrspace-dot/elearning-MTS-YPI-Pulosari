@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Download, Eye, Search, BookOpen, Loader2, ChevronLeft } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getStudentMateriPageAction } from "@/lib/actions/siswa-actions";
+import { getSubjectDetailAction } from "@/lib/actions/pengampu-actions";
 import { useRouter, useSearchParams } from "next/navigation";
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -36,25 +37,33 @@ export default function MateriPage() {
   const mapelIdFilter = searchParams.get("id");
 
   const [data, setData] = useState([]);
+  const [subjectName, setSubjectName] = useState("");
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Semua");
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    const fetchMateri = async () => {
+    const fetchData = async () => {
       if (user?.kelasId) {
+        // Fetch materials
         const res = await getStudentMateriPageAction(user.kelasId);
-        if (res.success) {
-          setData(res.data);
+        if (res.success) setData(res.data);
+
+        // Fetch subject name if strictly filtered
+        if (mapelIdFilter) {
+          const sRes = await getSubjectDetailAction(user.kelasId, mapelIdFilter);
+          if (sRes.success && sRes.data) {
+             setSubjectName(sRes.data.mapel.nama);
+          }
         }
       }
       setLoading(false);
     };
 
     if (user) {
-      fetchMateri();
+      fetchData();
     }
-  }, [user]);
+  }, [user, mapelIdFilter]);
 
   // Handle Mapel filter from URL - STRICT FILTERING
   const filteredData = useMemo(() => {
@@ -71,11 +80,11 @@ export default function MateriPage() {
 
   // Update header text based on filter
   const currentMapelName = useMemo(() => {
-    if (mapelIdFilter && data.length > 0) {
-      return data.find(m => m.mapelId === mapelIdFilter)?.mapel.nama || "";
+    if (mapelIdFilter) {
+       return subjectName || data.find(m => m.mapelId === mapelIdFilter)?.mapel.nama || "";
     }
     return "";
-  }, [mapelIdFilter, data]);
+  }, [mapelIdFilter, subjectName, data]);
 
   const allMapel = useMemo(() => {
     return ["Semua", ...new Set(data.map(m => m.mapel.nama))];
