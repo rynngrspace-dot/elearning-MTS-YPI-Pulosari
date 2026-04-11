@@ -110,6 +110,14 @@ export default function TugasPage() {
 
   const toggle = (mapel) => setOpen((p) => ({ ...p, [mapel]: !p[mapel] }));
 
+  // Header Title with Mapel Name
+  const currentMapelName = useMemo(() => {
+    if (mapelIdFilter && data.length > 0) {
+      return data.find(t => t.mapelId === mapelIdFilter)?.mapel.nama || "";
+    }
+    return "";
+  }, [mapelIdFilter, data]);
+
   const handleSubmit = async () => {
     if (!selected || !user?.studentId) return;
     setSubmitting(true);
@@ -170,7 +178,9 @@ export default function TugasPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-zinc-900">Daftar Tugas</h1>
+            <h1 className="text-xl font-bold text-zinc-900">
+              Daftar Tugas {currentMapelName ? `(${currentMapelName})` : ""}
+            </h1>
             <p className="text-xs text-zinc-400 mt-1">
               {totalBelum} tugas belum dikumpulkan untuk kelas {user?.kelas || "Anda"}
             </p>

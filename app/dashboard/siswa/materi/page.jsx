@@ -121,7 +121,7 @@ export default function MateriPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-bold text-xl text-zinc-900 font-['Plus_Jakarta_Sans']">
-              Materi Pelajaran {filter !== "Semua" ? `: ${filter}` : ""}
+              Materi Pelajaran {currentMapelName ? `(${currentMapelName})` : ""}
             </p>
             <p className="text-xs text-zinc-400 mt-1">
               {filtered.length} materi tersedia untuk kelas {user?.kelas || "Anda"}
