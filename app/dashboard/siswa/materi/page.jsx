@@ -56,14 +56,25 @@ export default function MateriPage() {
     }
   }, [user]);
 
-  // Handle Mapel filter from URL
-  useEffect(() => {
-    if (mapelIdFilter && data.length > 0) {
-        const target = data.find(m => m.mapelId === mapelIdFilter);
-        if (target) {
-            setFilter(target.mapel.nama);
-        }
+  // Handle Mapel filter from URL - STRICT FILTERING
+  const filteredData = useMemo(() => {
+    let result = data;
+    if (mapelIdFilter) {
+      result = data.filter(m => m.mapelId === mapelIdFilter);
     }
+    // Search query filter
+    if (query) {
+      result = result.filter(m => m.judul.toLowerCase().includes(query.toLowerCase()));
+    }
+    return result;
+  }, [data, mapelIdFilter, query]);
+
+  // Update header text based on filter
+  const currentMapelName = useMemo(() => {
+    if (mapelIdFilter && data.length > 0) {
+      return data.find(m => m.mapelId === mapelIdFilter)?.mapel.nama || "";
+    }
+    return "";
   }, [mapelIdFilter, data]);
 
   const allMapel = useMemo(() => {
@@ -71,15 +82,20 @@ export default function MateriPage() {
   }, [data]);
 
   const filtered = useMemo(() => {
-    return data
+    // Apply strict subject filter if mapelIdFilter is present
+    const baseData = mapelIdFilter 
+      ? data.filter(m => m.mapelId === mapelIdFilter)
+      : data;
+
+    return baseData
       .filter(m => {
-        const mM = filter === "Semua" || m.mapel.nama === filter;
+        const mM = mapelIdFilter ? true : (filter === "Semua" || m.mapel.nama === filter);
         const mQ = m.judul.toLowerCase().includes(query.toLowerCase())
           || m.mapel.nama.toLowerCase().includes(query.toLowerCase());
         return mM && mQ;
       })
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [data, filter, query]);
+  }, [data, filter, query, mapelIdFilter]);
 
   if (loading) {
     return (

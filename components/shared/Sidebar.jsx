@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { LogOut, GraduationCap, X, ChevronDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { navConfig } from "@/app/lib/navConfig";
@@ -36,23 +36,24 @@ const roleMeta = {
 export default function Sidebar({ open, close }) {
   const { user } = useAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const queryId = searchParams.get("id");
+
   const [openMenus, setOpenMenus] = useState({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dynamicMapels, setDynamicMapels] = useState([]);
 
-  // Fetch subjects for students and handle Auto-Expand
+  // Fetch subjects for students
   useEffect(() => {
     if (user?.role === "STUDENT") {
-      // Auto-expand Mata Pelajaran for students
-      setOpenMenus(prev => ({ ...prev, "Mata Pelajaran": true }));
-
       if (user?.kelasId) {
         const fetchMapels = async () => {
           const res = await getStudentMapelsAction(user.kelasId);
           if (res.success && res.data.length > 0) {
             setDynamicMapels(res.data.map(item => ({
               label: item.mapel.nama,
-              href: `/dashboard/siswa/mapel/${item.mapelId}`
+              href: `/dashboard/siswa/mapel/${item.mapelId}`,
+              id: item.mapelId
             })));
           }
         };
@@ -86,11 +87,18 @@ export default function Sidebar({ open, close }) {
     });
   }
 
-  const isActive = (href) => {
+  const isActive = (href, childId) => {
     // Exact match for main dashboard to avoid highlighting it when on sub-pages
     if (href === "/dashboard/admin" || href === "/dashboard/guru" || href === "/dashboard/siswa") {
       return pathname === href;
     }
+
+    // Context-aware check for students: 
+    // If we have an 'id' in the URL (from Materi/Tugas filter), highlight the matching subject
+    if (user?.role === "STUDENT" && queryId && childId === queryId) {
+      return true;
+    }
+
     // For other links, allow sub-path matches
     return pathname.startsWith(href);
   };
@@ -162,9 +170,9 @@ export default function Sidebar({ open, close }) {
           <nav className="flex flex-col gap-0.5">
             {items.map((item) => {
               const { icon: Icon, label, href, children } = item;
-             
+              // A menu is a parent if it has children OR if it's explicitly designed to be a dropdown (like Mata Pelajaran)
               const hasChildren = (children && children.length > 0) || label === "Mata Pelajaran";
-              const active = href ? isActive(href) : (children && children.some(child => isActive(child.href)));
+              const active = href ? isActive(href) : (children && children.some(child => isActive(child.href, child.id)));
               const isOpen = openMenus[label];
 
               if (hasChildren) {
@@ -193,11 +201,11 @@ export default function Sidebar({ open, close }) {
                     
                     {isOpen && (
                       <div className="flex flex-col mt-0.5 ml-4 pl-4 border-l border-border gap-0.5">
-                        {children.map((child) => {
-                          const childActive = isActive(child.href);
+                        {children && children.map((child) => {
+                          const childActive = isActive(child.href, child.id);
                           return (
                             <Link
-                              key={child.href}
+                              key={child.label}
                               href={child.href}
                               onClick={close}
                               className={`px-2.5 py-[7px] rounded-[8px] text-[13px] transition-colors

@@ -90,12 +90,17 @@ export default function TugasPage() {
   }, [mapelIdFilter, data]);
 
   const grouped = useMemo(() => {
-    return data.reduce((acc, t) => {
+    // Apply strict filtering if mapelIdFilter is present
+    const filteredData = mapelIdFilter 
+      ? data.filter(t => t.mapelId === mapelIdFilter)
+      : data;
+
+    return filteredData.reduce((acc, t) => {
       const mapelName = t.mapel.nama;
       (acc[mapelName] ??= { warna: getMapelStyle(mapelName), items: [] }).items.push(t);
       return acc;
     }, {});
-  }, [data]);
+  }, [data, mapelIdFilter]);
 
   useEffect(() => {
       if (Object.keys(grouped).length > 0 && Object.keys(open).length === 0) {
