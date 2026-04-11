@@ -101,57 +101,69 @@ export default function TeacherStudentsPage() {
         </div>
       </div>
 
-      {/* Student Grid */}
+      {/* Student Table */}
       {filteredStudents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredStudents.map((student) => (
-            <div 
-              key={student.id}
-              className="group bg-white rounded-2xl border border-zinc-200 p-5 hover:border-indigo hover:shadow-lg hover:shadow-indigo/5 transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 group-hover:bg-indigo group-hover:text-white transition-colors">
-                    <GraduationCap size={24} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-zinc-900 group-hover:text-indigo transition-colors line-clamp-1">
-                      {student.nama}
-                    </h3>
-                    <p className="text-xs text-zinc-400 font-medium tracking-wider uppercase">
-                      NISN: {student.nisn}
-                    </p>
-                  </div>
-                </div>
-                <div className="px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-lg text-[10px] font-bold group-hover:bg-indigo/10 group-hover:text-indigo transition-colors">
-                  {student.kelas}
-                </div>
-              </div>
-
-              <div className="space-y-2.5 border-t border-zinc-100 pt-4">
-                <div className="flex items-center gap-3 text-zinc-500">
-                  <Mail size={14} className="shrink-0" />
-                  <span className="text-xs truncate">{student.username}@elearning.com</span>
-                </div>
-                <div className="flex items-center gap-3 text-zinc-500">
-                  <MapPin size={14} className="shrink-0" />
-                  <span className="text-xs line-clamp-1">{student.alamat || "Alamat belum diatur"}</span>
-                </div>
-                {student.noHpOrangTua && (
-                  <div className="flex items-center gap-3 text-zinc-500">
-                    <Phone size={14} className="shrink-0" />
-                    <span className="text-xs">{student.noHpOrangTua}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-zinc-50 flex justify-end">
-                 <button className="text-[11px] font-bold text-indigo flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 cursor-pointer">
-                   LIHAT DETAIL <ChevronRight size={14} />
-                 </button>
-              </div>
-            </div>
-          ))}
+        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm shadow-indigo/5">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-zinc-50/80 border-b border-zinc-200">
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider w-16">No</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Nama Lengkap</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">NISN</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider text-center">Kelas</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider text-center">Gender</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Kontak Orang Tua</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {filteredStudents.map((student, idx) => (
+                  <tr 
+                    key={student.id}
+                    className="group hover:bg-cream/30 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-sm text-zinc-400 font-medium">
+                      {(idx + 1).toString().padStart(2, '0')}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 group-hover:bg-indigo group-hover:text-white transition-all transform group-hover:scale-105 duration-300">
+                          <GraduationCap size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-zinc-900 group-hover:text-indigo transition-colors">{student.nama}</p>
+                          <p className="text-[11px] text-zinc-400">{student.username}@elearning.com</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-600 font-mono">
+                      {student.nisn}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-lg text-[11px] font-bold group-hover:bg-indigo/10 group-hover:text-indigo transition-colors">
+                        {student.kelas}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-zinc-600">
+                      {student.gender === "L" ? "Laki-laki" : "Perempuan"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-zinc-500">
+                        <Phone size={14} className="group-hover:text-green-500 transition-colors" />
+                        <span className="text-xs">{student.noHpOrangTua || "-"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                       <button className="p-2 text-indigo hover:bg-indigo/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer" title="Lihat Profil">
+                         <ChevronRight size={18} />
+                       </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-dashed border-zinc-300 p-12 flex flex-col items-center justify-center text-center">
