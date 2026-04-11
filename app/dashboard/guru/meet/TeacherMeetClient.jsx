@@ -94,15 +94,15 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
         </div>
       </div>
 
-      {/* INFO CARD */}
-      <div className="bg-indigo-light/20 border border-indigo/20 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-         <div className="w-12 h-12 shrink-0 rounded-full bg-indigo/10 flex items-center justify-center text-indigo">
-            <Users size={20} />
+      {/* MODERATOR TIP */}
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm">
+         <div className="w-12 h-12 shrink-0 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+            <Power size={20} />
          </div>
          <div className="flex-1">
-            <h4 className="text-sm font-bold text-indigo uppercase tracking-tight mb-1">Panduan Penggunaan</h4>
-            <p className="text-xs text-ink-2 leading-relaxed max-w-2xl">
-              Klik <strong>"Mulai Pertemuan"</strong> untuk membuka ruang virtual. Jitsi akan meminta Anda login (Google/Facebook/GitHub) sebagai <strong>Moderator</strong> untuk keamanan. Setelah Anda masuk, Siswa baru bisa bergabung secara otomatis tanpa login tambahan.
+            <h4 className="text-sm font-bold text-amber-900 uppercase tracking-tight mb-1">Penting: Hak Akses Moderator</h4>
+            <p className="text-xs text-amber-800 leading-relaxed max-w-2xl">
+              Saat pertama kali membuka room, Jitsi akan meminta Anda untuk login (Google/Facebook/GitHub). Silakan login untuk mendapatkan hak <strong>Moderator</strong> (Admin) agar Anda bisa mengatur suara siswa, mengeluarkan peserta, atau mengunci ruangan. Siswa <strong>tidak perlu</strong> melakukan login ini.
             </p>
          </div>
       </div>
