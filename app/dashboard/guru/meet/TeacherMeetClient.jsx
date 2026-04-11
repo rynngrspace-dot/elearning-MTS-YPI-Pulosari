@@ -6,7 +6,7 @@ import { createMeetingAction, endMeetingAction } from "@/lib/actions/meet-action
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-export default function TeacherMeetClient({ initialAssignments, teacherId }) {
+export default function TeacherMeetClient({ initialAssignments, teacherId, userName }) {
   const [loading, setLoading] = useState({});
   const [assignments, setAssignments] = useState(initialAssignments);
 
@@ -33,8 +33,9 @@ export default function TeacherMeetClient({ initialAssignments, teacherId }) {
         a.id === id ? { ...a, meetings: [res.data] } : a
       ));
 
-      // Open Jitsi In New Tab
-      window.open(`https://meet.jit.si/${roomName}`, "_blank");
+      // Open Jitsi In New Tab with Auto-Login Params
+      const jitsiUrl = `https://meet.jit.si/${roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${userName || "Guru"}"`;
+      window.open(jitsiUrl, "_blank");
     } else {
       toast({
         title: "Gagal",
@@ -102,7 +103,7 @@ export default function TeacherMeetClient({ initialAssignments, teacherId }) {
             <h4 className="text-sm font-bold text-indigo uppercase tracking-tight mb-1">Panduan Penggunaan</h4>
             <p className="text-xs text-ink-2 leading-relaxed max-w-2xl">
               Klik <strong>"Mulai Pertemuan"</strong> untuk membuka ruang virtual bagi siswa. Link akan otomatis muncul di dashboard siswa yang bersangkutan. 
-              Gunakan fitur ini untuk sesi tanya jawab atau kelas daring secara real-time.
+              Gunakan fitur ini untuk sesi tanya jawab atau kelas daring secara real-time. (Auto-login aktif: Nama Anda akan otomatis terpasang di Meeting).
             </p>
          </div>
       </div>
@@ -145,7 +146,10 @@ export default function TeacherMeetClient({ initialAssignments, teacherId }) {
                   {activeMeeting ? (
                     <>
                       <button
-                        onClick={() => window.open(`https://meet.jit.si/${activeMeeting.roomName}`, "_blank")}
+                        onClick={() => {
+                          const jitsiUrl = `https://meet.jit.si/${activeMeeting.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${userName || "Guru"}"`;
+                          window.open(jitsiUrl, "_blank");
+                        }}
                         className="w-full py-3 bg-green-500 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-green-600 transition shadow-sm cursor-pointer"
                       >
                         <ExternalLink size={14} /> Masuk Ulang Room

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Video, ExternalLink, CalendarClock, User, BookOpen, AlertCircle, Loader2 } from "lucide-react";
 import { getMeetingsForStudentAction } from "@/lib/actions/meet-actions";
 
-export default function StudentMeetClient({ initialMeetings, kelasId }) {
+export default function StudentMeetClient({ initialMeetings, kelasId, userName }) {
   const [meetings, setMeetings] = useState(initialMeetings);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -89,7 +89,10 @@ export default function StudentMeetClient({ initialMeetings, kelasId }) {
 
                 <div className="pt-2">
                    <button
-                     onClick={() => window.open(`https://meet.jit.si/${meet.roomName}`, "_blank")}
+                     onClick={() => {
+                       const jitsiUrl = `https://meet.jit.si/${meet.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${userName || "Siswa"}"`;
+                       window.open(jitsiUrl, "_blank");
+                     }}
                      className="w-full py-4 bg-indigo text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-dark transition shadow-lg shadow-indigo/10 cursor-pointer"
                    >
                      <ExternalLink size={16} /> Gabung Pertemuan

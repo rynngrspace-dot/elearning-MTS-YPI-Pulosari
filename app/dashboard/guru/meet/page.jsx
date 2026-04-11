@@ -26,6 +26,7 @@ export default async function TeacherMeetPage() {
     <TeacherMeetClient 
       initialAssignments={res.success ? res.data : []} 
       teacherId={teacher.id}
+      userName={session.name}
     />
   );
 }

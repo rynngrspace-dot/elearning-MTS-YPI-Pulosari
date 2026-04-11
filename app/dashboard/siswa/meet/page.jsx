@@ -26,6 +26,7 @@ export default async function StudentMeetPage() {
     <StudentMeetClient 
       initialMeetings={res.success ? res.data : []} 
       kelasId={student.kelasId}
+      userName={session.name}
     />
   );
 }
