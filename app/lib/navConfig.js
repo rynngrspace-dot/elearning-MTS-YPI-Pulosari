@@ -23,6 +23,7 @@ export const navConfig = {
       children: []
     },
     { icon: UserCheck,       label: "Presensi",  href: "/dashboard/siswa/absensi" },
+    { icon: Video,           label: "Jitsi Meet", href: "/dashboard/siswa/meet" },
   ],
   guru: [
     { icon: LayoutDashboard, label: "Beranda",          href: "/dashboard/guru" },
@@ -66,6 +67,7 @@ export const pageTitles = {
   "/dashboard/siswa/nilai":      "Rekap Nilai",
   "/dashboard/siswa/jadwal":     "Jadwal Pelajaran",
   "/dashboard/siswa/absensi":    "Rekap Presensi",
+  "/dashboard/siswa/meet":       "Jitsi Video Conference",
   // guru
   "/dashboard/guru/mapel":       "Mata Pelajaran Pengampu",
   "/dashboard/guru/jadwal":      "Jadwal Mengajar",
