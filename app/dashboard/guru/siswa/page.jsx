@@ -11,7 +11,8 @@ import {
   MapPin, 
   Loader2, 
   ChevronRight,
-  UserCheck
+  UserCheck,
+  Eye
 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getTeacherStudentsAction } from "@/lib/actions/pengampu-actions";
@@ -155,9 +156,16 @@ export default function TeacherStudentsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                       <button className="p-2 text-indigo hover:bg-indigo/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer" title="Lihat Profil">
-                         <ChevronRight size={18} />
-                       </button>
+                       <div className="relative inline-block group/tooltip">
+                          <button className="p-2 text-indigo hover:bg-indigo/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer" title="Lihat Profil">
+                            <Eye size={18} />
+                          </button>
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 text-white text-[10px] font-bold rounded opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+                            Lihat Detail
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+                          </div>
+                       </div>
                     </td>
                   </tr>
                 ))}
