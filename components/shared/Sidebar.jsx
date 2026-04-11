@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { LogOut, GraduationCap, X, ChevronDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { navConfig } from "@/app/lib/navConfig";
-import { getStudentMapelsAction } from "@/lib/actions/pengampu-actions";
+import { getStudentMapelsAction, getTeacherMapelsAction } from "@/lib/actions/pengampu-actions";
 import { useEffect } from "react";
 
 const roleMeta = {
@@ -61,6 +61,23 @@ export default function Sidebar({ open, close }) {
       }
     }
   }, [user]);
+  
+  // Fetch subjects for teachers
+  useEffect(() => {
+    if (user?.role === "TEACHER" && user?.teacherId) {
+        const fetchMapels = async () => {
+          const res = await getTeacherMapelsAction(user.teacherId);
+          if (res.success && res.data.length > 0) {
+            setDynamicMapels(res.data.map(item => ({
+              label: `${item.mapel.nama} - ${item.kelas.nama}`,
+              href: `/dashboard/guru/mapel/${item.id}`,
+              id: item.id
+            })));
+          }
+        };
+        fetchMapels();
+    }
+  }, [user]);
 
   // Handle Auto-Expand Persistence
   useEffect(() => {
@@ -85,8 +102,8 @@ export default function Sidebar({ open, close }) {
   let items = navConfig[roleKey] ?? [];
   const meta = roleMeta[roleKey] || roleMeta.siswa;
 
-  // Inject dynamic mapels if student
-  if (roleKey === "siswa") {
+  // Inject dynamic mapels if student or teacher
+  if (roleKey === "siswa" || roleKey === "guru") {
     items = items.map(item => {
       if (item.label === "Mata Pelajaran") {
         return { ...item, children: dynamicMapels };

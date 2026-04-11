@@ -26,7 +26,12 @@ export const navConfig = {
   ],
   guru: [
     { icon: LayoutDashboard, label: "Beranda",          href: "/dashboard/guru" },
-    { icon: BookMarked,      label: "Mata Pelajaran",   href: "/dashboard/guru/mapel" },
+    { 
+      icon: BookMarked,      
+      label: "Mata Pelajaran",   
+      children: [] 
+    },
+    { icon: Users,           label: "Daftar Siswa",     href: "/dashboard/guru/siswa" },
     { icon: CalendarClock,   label: "Jadwal Mengajar",  href: "/dashboard/guru/jadwal" },
     { icon: UserCheck,       label: "Presensi",         href: "/dashboard/guru/absensi" },
     { icon: BookOpen,        label: "Materi",           href: "/dashboard/guru/materi" },
