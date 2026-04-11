@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Loader2,
   ChevronLeft,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getStudentTugasPageAction, submitTugasAction } from "@/lib/actions/siswa-actions";
@@ -56,6 +57,7 @@ export default function TugasPage() {
   const mapelIdFilter = searchParams.get("id");
 
   const [data, setData] = useState([]);
+  const [viewingTask, setViewingTask] = useState(null);
   const [subjectName, setSubjectName] = useState("");
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState({});
@@ -282,10 +284,10 @@ export default function TugasPage() {
 
                         {st !== "belum" ? (
                            <button
-                            disabled
-                            className="flex items-center gap-1 h-fit px-4 py-2 text-sm font-semibold text-indigo bg-indigo/10 rounded-lg cursor-not-allowed opacity-70"
+                            onClick={() => setViewingTask(tugas)}
+                            className="flex items-center gap-1 h-fit px-4 py-2 text-sm font-semibold text-indigo bg-indigo/10 rounded-lg hover:bg-indigo/20 transition cursor-pointer"
                            >
-                             (Sudah Mengumpulkan)
+                             <Eye size={14} /> Lihat Detail
                            </button>
                         ) : isLate ? (
                            <button
@@ -358,6 +360,80 @@ export default function TugasPage() {
             >
               {submitting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
               {submitting ? "Mengirim..." : "Kumpulkan Tugas"}
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* DETAIL MODAL */}
+      {viewingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl animate-[slideUp_.2s_ease]">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded bg-zinc-100 text-zinc-500">
+                  Detail Pengumpulan
+                </span>
+                <h2 className="font-bold text-lg mt-2 text-ink-1 leading-tight">{viewingTask.judul}</h2>
+                <p className="text-xs text-zinc-400 mt-1">{viewingTask.mapel.nama}</p>
+              </div>
+              <button 
+                onClick={() => setViewingTask(null)} 
+                className="w-8 h-8 flex items-center justify-center border border-zinc-200 rounded-lg cursor-pointer hover:bg-zinc-50 text-zinc-400"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              {/* File Section */}
+              <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Dokumen Anda</p>
+                <a 
+                  href={viewingTask.submissions[0]?.fileUrl} 
+                  target="_blank"
+                  className="flex items-center gap-3 group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-white border border-zinc-200 flex items-center justify-center text-teal-500 shadow-sm group-hover:border-teal-200 transition-colors">
+                    <FileText size={20} />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-sm font-semibold text-zinc-700 truncate group-hover:text-teal-600 transition-colors">Lihat Jawaban</p>
+                    <p className="text-[10px] text-zinc-400">Klik untuk membuka file di tab baru</p>
+                  </div>
+                </a>
+              </div>
+
+              {/* Status & Grade */}
+              <div className="flex gap-4">
+                <div className="flex-1 p-4 rounded-xl bg-zinc-50 border border-zinc-100 text-center">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Status</p>
+                  <p className="text-sm font-bold text-ink-1">
+                    {viewingTask.submissions[0]?.nilai !== null ? "Selesai" : "Menunggu"}
+                  </p>
+                </div>
+                <div className="flex-1 p-4 rounded-xl bg-indigo/5 border border-indigo/10 text-center">
+                  <p className="text-[10px] font-bold text-indigo/60 uppercase tracking-widest mb-1">Nilai</p>
+                  <p className="text-lg font-black text-indigo">
+                    {viewingTask.submissions[0]?.nilai ?? "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback */}
+              <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Feedback Guru</p>
+                <p className="text-sm text-zinc-600 italic leading-relaxed">
+                  "{viewingTask.submissions[0]?.feedback || "Belum ada feedback dari guru."}"
+                </p>
+              </div>
+            </div>
+
+            <button
+               onClick={() => setViewingTask(null)}
+               className="w-full mt-6 py-3 font-semibold text-zinc-500 bg-zinc-100 rounded-xl hover:bg-zinc-200 transition cursor-pointer"
+            >
+              Tutup
             </button>
           </div>
         </div>

@@ -62,6 +62,14 @@ export default function Sidebar({ open, close }) {
     }
   }, [user]);
 
+  // Handle Auto-Expand Persistence
+  useEffect(() => {
+     const isSubjectRoute = pathname.includes('/mapel/') || (queryId && (pathname.includes('/tugas') || pathname.includes('/materi')));
+     if (isSubjectRoute) {
+        setOpenMenus(prev => ({ ...prev, "Mata Pelajaran": true }));
+     }
+  }, [pathname, queryId]);
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
