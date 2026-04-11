@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getStudentTugasPageAction, submitTugasAction } from "@/lib/actions/siswa-actions";
+import { getSubjectDetailAction } from "@/lib/actions/pengampu-actions";
 import { toast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -161,7 +162,12 @@ export default function TugasPage() {
   };
 
   const totalBelum = useMemo(() => {
-    return data.filter(t => t.submissions.length === 0).length;
+    const now = new Date();
+    return data.filter(t => {
+      const submission = t.submissions.length > 0;
+      const isLate = t.dueDate && now > new Date(t.dueDate);
+      return !submission && !isLate;
+    }).length;
   }, [data]);
 
   if (loading) {
@@ -206,7 +212,12 @@ export default function TugasPage() {
       <div className="flex flex-col gap-3">
         {Object.entries(grouped).map(([mapel, { warna, items }]) => {
           const isOpen = open[mapel];
-          const belumCount = items.filter(t => t.submissions.length === 0).length;
+          const now = new Date();
+          const belumCount = items.filter(t => {
+            const submission = t.submissions.length > 0;
+            const isLate = t.dueDate && now > new Date(t.dueDate);
+            return !submission && !isLate;
+          }).length;
 
           return (
             <div
@@ -243,6 +254,11 @@ export default function TugasPage() {
                     const cfg = statusCfg[st];
                     const Icon = cfg.icon;
 
+                    // Deadline logic
+                    const now = new Date();
+                    const deadline = tugas.dueDate ? new Date(tugas.dueDate) : null;
+                    const isLate = deadline && now > deadline;
+
                     return (
                       <div key={tugas.id} className="flex gap-4 px-5 py-4 border-t border-zinc-100">
                         <div className="w-1 rounded" style={{ background: warna }} />
@@ -264,13 +280,27 @@ export default function TugasPage() {
                           <p className="text-sm text-zinc-600">{tugas.deskripsi || "Tidak ada deskripsi."}</p>
                         </div>
 
-                        {st === "belum" && (
-                          <button
-                            onClick={() => setSelected(tugas)}
-                            className="flex items-center gap-1 h-fit px-4 py-2 text-sm font-semibold text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition cursor-pointer"
-                          >
-                            <Upload size={14} /> Kumpulkan
-                          </button>
+                        {st !== "belum" ? (
+                           <button
+                            disabled
+                            className="flex items-center gap-1 h-fit px-4 py-2 text-sm font-semibold text-indigo bg-indigo/10 rounded-lg cursor-not-allowed opacity-70"
+                           >
+                             (Sudah Mengumpulkan)
+                           </button>
+                        ) : isLate ? (
+                           <button
+                             disabled
+                             className="flex items-center gap-1 h-fit px-4 py-2 text-sm font-semibold text-red-600 bg-red-50 rounded-lg cursor-not-allowed opacity-70"
+                           >
+                             (Tidak Mengumpulkan)
+                           </button>
+                        ) : (
+                           <button
+                             onClick={() => setSelected(tugas)}
+                             className="flex items-center gap-1 h-fit px-4 py-2 text-sm font-semibold text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition cursor-pointer"
+                           >
+                             <Upload size={14} /> Kumpulkan
+                           </button>
                         )}
                       </div>
                     );
