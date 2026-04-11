@@ -253,13 +253,13 @@ export default function MateriPage() {
           })}
         </div>
       ) : (
-        <div className="text-center py-16">
-          <BookOpen size={36} className="text-zinc-400 mx-auto mb-3" />
-          <p className="text-sm font-medium text-zinc-600">
-            Materi tidak ditemukan
-          </p>
-          <p className="text-xs text-zinc-400 mt-1">
-            Materi untuk kelas Anda belum diunggah oleh Guru
+        <div className="bg-white rounded-3xl border border-dashed border-zinc-200 py-24 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center text-zinc-300 mb-4">
+            <BookOpen size={32} />
+          </div>
+          <h3 className="text-sm font-bold text-zinc-800 uppercase tracking-widest mb-1">Materi Kosong</h3>
+          <p className="text-[11px] text-zinc-400 max-w-[200px] leading-relaxed">
+            Belum ada materi pelajaran yang diunggah oleh guru untuk kelas Anda.
           </p>
         </div>
       )}

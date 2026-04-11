@@ -210,9 +210,9 @@ export default function TugasPage() {
         </div>
       </div>
 
-      {/* ACCORDION */}
+      {/* ACCORDION / EMPTY STATE */}
       <div className="flex flex-col gap-3">
-        {Object.entries(grouped).map(([mapel, { warna, items }]) => {
+        {Object.keys(grouped).length > 0 ? Object.entries(grouped).map(([mapel, { warna, items }]) => {
           const isOpen = open[mapel];
           const now = new Date();
           const belumCount = items.filter(t => {
@@ -311,7 +311,17 @@ export default function TugasPage() {
               )}
             </div>
           );
-        })}
+        }) : (
+          <div className="bg-white rounded-3xl border border-dashed border-zinc-200 py-20 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center text-zinc-300 mb-4">
+              <FileText size={32} />
+            </div>
+            <h3 className="text-sm font-bold text-zinc-800 uppercase tracking-widest mb-1">Tugas Kosong</h3>
+            <p className="text-[11px] text-zinc-400 max-w-[200px] leading-relaxed">
+              Belum ada tugas yang diberikan oleh guru untuk Anda.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* MODAL */}
