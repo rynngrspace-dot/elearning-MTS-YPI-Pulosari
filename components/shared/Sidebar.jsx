@@ -40,17 +40,6 @@ export default function Sidebar({ open, close }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dynamicMapels, setDynamicMapels] = useState([]);
 
-  // Mockup fallback data for Students
-  const mockupMapels = [
-    { label: "Bahasa Indonesia", href: "/dashboard/siswa/mapel/bahasa-indonesia" },
-    { label: "Seni Budaya", href: "/dashboard/siswa/mapel/seni-budaya" },
-    { label: "Bahasa Inggris", href: "/dashboard/siswa/mapel/bahasa-inggris" },
-    { label: "Prakarya", href: "/dashboard/siswa/mapel/prakarya" },
-    { label: "Bahasa Arab", href: "/dashboard/siswa/mapel/bahasa-arab" },
-    { label: "Akidah Akhlak", href: "/dashboard/siswa/mapel/akidah-akhlak" },
-    { label: "Matematika", href: "/dashboard/siswa/mapel/matematika" },
-  ];
-
   // Fetch subjects for students and handle Auto-Expand
   useEffect(() => {
     if (user?.role === "STUDENT") {
@@ -91,9 +80,7 @@ export default function Sidebar({ open, close }) {
   if (roleKey === "siswa") {
     items = items.map(item => {
       if (item.label === "Mata Pelajaran") {
-        // Only replace if we have real dynamic data from DB
-        const subjectList = dynamicMapels.length > 0 ? dynamicMapels : item.children;
-        return { ...item, children: subjectList };
+        return { ...item, children: dynamicMapels };
       }
       return item;
     });

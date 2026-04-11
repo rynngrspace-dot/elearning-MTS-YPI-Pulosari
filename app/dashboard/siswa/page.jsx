@@ -76,7 +76,7 @@ export default function SiswaPage() {
     return (
       <div className="p-12 flex flex-col items-center justify-center min-h-[400px] gap-4">
          <Loader2 className="w-10 h-10 animate-spin text-indigo" />
-         <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Sinkronisasi Data...</p>
+         <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Loading...</p>
       </div>
     );
   }

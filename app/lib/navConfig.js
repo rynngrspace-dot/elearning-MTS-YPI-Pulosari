@@ -17,20 +17,10 @@ import {
 export const navConfig = {
   siswa: [
     { icon: LayoutDashboard, label: "Beranda",  href: "/dashboard/siswa" },
-    { icon: BookOpen,        label: "Materi",   href: "/dashboard/siswa/materi" },
-    { icon: ClipboardList,   label: "Tugas",    href: "/dashboard/siswa/tugas" },
     { 
       icon: BookMarked,      
       label: "Mata Pelajaran",    
-      children: [
-        { label: "Bahasa Indonesia", href: "/dashboard/siswa/mapel/bahasa-indonesia" },
-        { label: "Bahasa Inggris",   href: "/dashboard/siswa/mapel/bahasa-inggris" },
-        { label: "Seni Budaya",      href: "/dashboard/siswa/mapel/seni-budaya" },
-        { label: "Prakarya",         href: "/dashboard/siswa/mapel/prakarya" },
-        { label: "Bahasa Arab",      href: "/dashboard/siswa/mapel/bahasa-arab" },
-        { label: "Akidah Akhlak",    href: "/dashboard/siswa/mapel/akidah-akhlak" },
-        { label: "Matematika",       href: "/dashboard/siswa/mapel/matematika" },
-      ]
+      children: []
     },
     { icon: UserCheck,       label: "Presensi",  href: "/dashboard/siswa/absensi" },
   ],
