@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Download, Eye, Search, BookOpen, Loader2 } from "lucide-react";
+import { Download, Eye, Search, BookOpen, Loader2, ChevronLeft } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getStudentMateriPageAction } from "@/lib/actions/siswa-actions";
+import { useRouter, useSearchParams } from "next/navigation";
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const formatTgl = (d) => {
@@ -30,6 +31,10 @@ const getMapelStyle = (mapelName) => {
 /* ── Component ───────────────────────────────────────────── */
 export default function MateriPage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const mapelIdFilter = searchParams.get("id");
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Semua");
@@ -50,6 +55,16 @@ export default function MateriPage() {
       fetchMateri();
     }
   }, [user]);
+
+  // Handle Mapel filter from URL
+  useEffect(() => {
+    if (mapelIdFilter && data.length > 0) {
+        const target = data.find(m => m.mapelId === mapelIdFilter);
+        if (target) {
+            setFilter(target.mapel.nama);
+        }
+    }
+  }, [mapelIdFilter, data]);
 
   const allMapel = useMemo(() => {
     return ["Semua", ...new Set(data.map(m => m.mapel.nama))];
@@ -79,26 +94,35 @@ export default function MateriPage() {
     <div className="p-8 flex flex-col gap-6 animate-[slideUp_.3s_ease]">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-bold text-xl text-zinc-900 font-['Plus_Jakarta_Sans']">
-            Materi Pelajaran
-          </p>
-          <p className="text-xs text-zinc-400 mt-1">
-            {filtered.length} materi tersedia untuk kelas {user?.kelas || "Anda"}
-          </p>
-        </div>
+      <div className="flex flex-col gap-4">
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-ink-3 hover:text-indigo transition-colors w-fit"
+        >
+          <ChevronLeft size={14} /> Kembali
+        </button>
 
-        {/* Search */}
-        <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 py-2 w-[220px]">
-          <Search size={13} className="text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Cari materi..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="bg-transparent outline-none text-sm text-zinc-800 w-full"
-          />
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-bold text-xl text-zinc-900 font-['Plus_Jakarta_Sans']">
+              Materi Pelajaran {filter !== "Semua" ? `: ${filter}` : ""}
+            </p>
+            <p className="text-xs text-zinc-400 mt-1">
+              {filtered.length} materi tersedia untuk kelas {user?.kelas || "Anda"}
+            </p>
+          </div>
+
+          {/* Search */}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 py-2 w-[220px]">
+            <Search size={13} className="text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Cari materi..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="bg-transparent outline-none text-sm text-zinc-800 w-full"
+            />
+          </div>
         </div>
       </div>
 

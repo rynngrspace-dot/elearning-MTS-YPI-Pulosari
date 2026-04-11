@@ -11,10 +11,12 @@ import {
   Paperclip,
   ChevronDown,
   Loader2,
+  ChevronLeft,
 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { getStudentTugasPageAction, submitTugasAction } from "@/lib/actions/siswa-actions";
 import { toast } from "@/hooks/use-toast";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const statusCfg = {
   belum: {
@@ -48,6 +50,10 @@ const getMapelStyle = (mapelName) => {
 
 export default function TugasPage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const mapelIdFilter = searchParams.get("id");
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState({});
@@ -71,6 +77,17 @@ export default function TugasPage() {
       fetchTugas();
     }
   }, [user]);
+
+  // Handle Mapel filter from URL
+  useEffect(() => {
+    if (mapelIdFilter && data.length > 0) {
+        setOpen({}); // Close other accordions
+        const target = data.find(t => t.mapelId === mapelIdFilter);
+        if (target) {
+            setOpen({ [target.mapel.nama]: true });
+        }
+    }
+  }, [mapelIdFilter, data]);
 
   const grouped = useMemo(() => {
     return data.reduce((acc, t) => {
@@ -138,19 +155,28 @@ export default function TugasPage() {
   return (
     <div className="p-8 flex flex-col gap-6 animate-[slideUp_.3s_ease]">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-zinc-900">Daftar Tugas</h1>
-          <p className="text-xs text-zinc-400 mt-1">
-            {totalBelum} tugas belum dikumpulkan untuk kelas {user?.kelas || "Anda"}
-          </p>
-        </div>
+      <div className="flex flex-col gap-4">
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-ink-3 hover:text-indigo transition-colors w-fit"
+        >
+          <ChevronLeft size={14} /> Kembali
+        </button>
 
-        {totalBelum > 0 && (
-          <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-red-50 text-red-600">
-            <AlertCircle size={12} /> {totalBelum} pending
-          </span>
-        )}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-900">Daftar Tugas</h1>
+            <p className="text-xs text-zinc-400 mt-1">
+              {totalBelum} tugas belum dikumpulkan untuk kelas {user?.kelas || "Anda"}
+            </p>
+          </div>
+
+          {totalBelum > 0 && (
+            <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-red-50 text-red-600">
+              <AlertCircle size={12} /> {totalBelum} pending
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ACCORDION */}

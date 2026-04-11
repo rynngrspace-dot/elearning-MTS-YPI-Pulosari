@@ -100,9 +100,11 @@ export default function Sidebar({ open, close }) {
   }
 
   const isActive = (href) => {
+    // Exact match for main dashboard to avoid highlighting it when on sub-pages
     if (href === "/dashboard/admin" || href === "/dashboard/guru" || href === "/dashboard/siswa") {
       return pathname === href;
     }
+    // For other links, allow sub-path matches
     return pathname.startsWith(href);
   };
 
