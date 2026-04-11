@@ -162,8 +162,9 @@ export default function Sidebar({ open, close }) {
           <nav className="flex flex-col gap-0.5">
             {items.map((item) => {
               const { icon: Icon, label, href, children } = item;
-              const hasChildren = children && children.length > 0;
-              const active = href ? isActive(href) : children.some(child => isActive(child.href));
+             
+              const hasChildren = (children && children.length > 0) || label === "Mata Pelajaran";
+              const active = href ? isActive(href) : (children && children.some(child => isActive(child.href)));
               const isOpen = openMenus[label];
 
               if (hasChildren) {
