@@ -91,7 +91,34 @@ export default function StudentMeetClient({ initialMeetings, kelasId, userName }
                    <button
                      onClick={() => {
                        const encodedName = encodeURIComponent(userName || "Siswa");
-                       const jitsiUrl = `https://meet.jit.si/${meet.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${encodedName}"`;
+                       // Comprehensive UI restrictions for students
+                       const restrictions = [
+                         "config.prejoinPageEnabled=false",
+                         `userInfo.displayName="${encodedName}"`,
+                         "config.disableRemoteMute=true",
+                         "config.disableRemoteMuteVideo=true",
+                         "config.disablePinToStage=true",
+                         "config.hideModerationTab=true",
+                         "config.securityUi.hideModerationTab=true",
+                         "config.remoteVideoMenu.disableKick=true",
+                         "config.remoteVideoMenu.disableGrantModerator=true",
+                         "config.remoteVideoMenu.disableMuteOthers=true",
+                         "config.remoteVideoMenu.disableMuteVideoOthers=true",
+                         "config.remoteVideoMenu.disableDemote=true",
+                         "config.remoteVideoMenu.disablePinToStage=true",
+                         "config.participantsPane.enabled=true",
+                         "config.participantsPane.muteAllButton=false",
+                         "config.participantsPane.hideMuteAllButton=true",
+                         "config.participantsPane.disableMoreActions=true",
+                         "config.toolbarButtons=['microphone','camera','fullscreen','fittowindow','hangup','chat','raisehand','tileview']",
+                         "config.moderatedMeetings=true",
+                         "config.lobby.enabled=true",
+                         "config.breakoutRooms.hideAddButton=true",
+                         "config.hideAddBreakoutRoomButton=true",
+                         "config.participantsPane.hideAddBreakoutRoomButton=true"
+                       ].join("&");
+                       
+                       const jitsiUrl = `https://meet.jit.si/${meet.roomName}#${restrictions}`;
                        window.open(jitsiUrl, "_blank");
                      }}
                      className="w-full py-4 bg-indigo text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-dark transition shadow-lg shadow-indigo/10 cursor-pointer"
