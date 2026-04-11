@@ -102,8 +102,7 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
          <div className="flex-1">
             <h4 className="text-sm font-bold text-indigo uppercase tracking-tight mb-1">Panduan Penggunaan</h4>
             <p className="text-xs text-ink-2 leading-relaxed max-w-2xl">
-              Klik <strong>"Mulai Pertemuan"</strong> untuk membuka ruang virtual bagi siswa. Link akan otomatis muncul di dashboard siswa yang bersangkutan. 
-              Gunakan fitur ini untuk sesi tanya jawab atau kelas daring secara real-time. (Auto-login aktif: Nama Anda akan otomatis terpasang di Meeting).
+              Klik <strong>"Mulai Pertemuan"</strong> untuk membuka ruang virtual. Jitsi akan meminta Anda login (Google/Facebook/GitHub) sebagai <strong>Moderator</strong> untuk keamanan. Setelah Anda masuk, Siswa baru bisa bergabung secara otomatis tanpa login tambahan.
             </p>
          </div>
       </div>
