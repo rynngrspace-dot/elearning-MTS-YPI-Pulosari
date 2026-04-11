@@ -18,12 +18,11 @@ import { getStudentDashboardDataAction } from "@/lib/actions/siswa-actions";
 
 export default function SiswaPage() {
   const { user } = useAuth();
-  const [data, setData] = useState({ schedules: [], tugas: [] });
+  const [data, setData] = useState({ schedules: [], tugas: [], materi: [], absensiSummary: null });
   const [loading, setLoading] = useState(true);
 
   const todayName = useMemo(() => {
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-    // Get time in WIB (UTC+7)
     const d = new Date();
     const wib = new Date(d.getTime() + (7 * 60 * 60 * 1000));
     return days[wib.getUTCDay()];
@@ -31,8 +30,8 @@ export default function SiswaPage() {
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      if (user?.kelasId) {
-        const res = await getStudentDashboardDataAction(user.kelasId);
+      if (user?.studentId && user?.kelasId) {
+        const res = await getStudentDashboardDataAction(user.studentId, user.kelasId);
         if (res.success) {
           setData(res.data);
         }
@@ -60,16 +59,16 @@ export default function SiswaPage() {
     { 
        icon: UserCheck, 
        label: "Kehadiran", 
-       value: "94%", 
+       value: loading ? "..." : (data.absensiSummary?.percentage || 0) + "%", 
        color: "#16A34A", bg: "bg-green-100", 
        href: "/dashboard/siswa/absensi" 
     },
     { 
        icon: BookOpen, 
-       label: "Mata Pelajaran", 
-       value: loading ? "..." : data.schedules.length + " Mapel", 
+       label: "Materi Baru", 
+       value: loading ? "..." : data.materi.length, 
        color: "#0EA5A0", bg: "bg-teal-100", 
-       href: "#" 
+       href: "/dashboard/siswa/materi" 
     },
   ];
 
@@ -77,7 +76,7 @@ export default function SiswaPage() {
     return (
       <div className="p-12 flex flex-col items-center justify-center min-h-[400px] gap-4">
          <Loader2 className="w-10 h-10 animate-spin text-indigo" />
-         <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Memuat Dashboard...</p>
+         <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Sinkronisasi Data...</p>
       </div>
     );
   }
@@ -108,9 +107,11 @@ export default function SiswaPage() {
         </div>
 
         <div className="relative z-10 text-right hidden md:block">
-          <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">Semester Genap 2024/2025</p>
+          <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">E-Learning Dashboard</p>
           <div className="bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/10 mt-3 inline-block">
-            <p className="text-[14px] font-black text-white/90 uppercase tracking-widest leading-none">Pekan ke-18</p>
+            <p className="text-[14px] font-black text-white/90 uppercase tracking-widest leading-none">
+                {new Date().toLocaleDateString('id-ID', { weekday: 'long' })}
+            </p>
           </div>
         </div>
       </div>
@@ -139,7 +140,7 @@ export default function SiswaPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
         
-        {/* Today's Schedule Card - DYNAMIC */}
+        {/* Today's Schedule Card */}
         <div className="bg-surface border border-border rounded-[32px] shadow-card overflow-hidden">
           <div className="px-8 py-6 border-b border-border bg-cream/30 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -198,37 +199,73 @@ export default function SiswaPage() {
           </div>
         </div>
 
-        {/* Assignments - DYNAMIC */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-surface border border-border rounded-[32px] shadow-card p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[13px] font-black text-ink uppercase tracking-widest">Tugas Mendatang</h3>
-              <div className="w-8 h-8 rounded-full bg-cream flex items-center justify-center text-ink-3 hover:bg-indigo/10 hover:text-indigo transition-colors cursor-pointer">
-                 <ArrowUpRight size={16} />
-              </div>
+        <div className="flex flex-col gap-8">
+            {/* Materi Terbaru Card */}
+            <div className="bg-surface border border-border rounded-[32px] shadow-card p-8">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-[13px] font-black text-ink uppercase tracking-widest">Materi Terbaru</h3>
+                    <Link href="/dashboard/siswa/materi">
+                        <div className="w-8 h-8 rounded-full bg-cream flex items-center justify-center text-ink-3 hover:bg-teal-50 hover:text-teal-600 transition-colors cursor-pointer">
+                            <ArrowUpRight size={16} />
+                        </div>
+                    </Link>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                    {data.materi.length > 0 ? (
+                        data.materi.map((m, i) => (
+                            <Link key={i} href="/dashboard/siswa/materi">
+                                <div className="p-4 rounded-2xl border border-border bg-white hover:border-teal-400/30 transition-all flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+                                        <BookOpen size={18} />
+                                    </div>
+                                    <div className="flex-1 overflow-hidden">
+                                        <p className="text-[13px] font-black text-ink truncate leading-tight uppercase">{m.judul}</p>
+                                        <p className="text-[9px] font-bold text-ink-3 uppercase tracking-widest mt-1">{m.mapel.nama}</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))
+                    ) : (
+                        <p className="text-[11px] font-medium text-ink-3 text-center py-6 italic uppercase tracking-widest">Belum ada materi</p>
+                    )}
+                </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              {data.tugas.length > 0 ? (
-                data.tugas.slice(0, 3).map((t, i) => (
-                  <div key={i} className="p-5 rounded-[24px] border border-border bg-white hover:border-indigo/30 transition-all">
-                    <div className="flex justify-between items-start mb-3">
-                      <p className="text-[13px] font-black text-ink tracking-tight uppercase leading-none">{t.judul}</p>
+            {/* Tugas Mendatang Card */}
+            <div className="bg-surface border border-border rounded-[32px] shadow-card p-8">
+                <div className="flex justify-between items-center mb-6">
+                <h3 className="text-[13px] font-black text-ink uppercase tracking-widest">Tugas Mendatang</h3>
+                <Link href="/dashboard/siswa/tugas">
+                    <div className="w-8 h-8 rounded-full bg-cream flex items-center justify-center text-ink-3 hover:bg-indigo/10 hover:text-indigo transition-colors cursor-pointer">
+                        <ArrowUpRight size={16} />
                     </div>
-                    <p className="text-[10px] font-bold text-ink-3 uppercase tracking-widest mb-4 opacity-70">{t.mapel.nama}</p>
-                    <div className="flex items-center gap-2 py-2 px-3 bg-cream/30 border border-border/40 rounded-xl">
-                      <Clock size={12} className="text-ink-3" />
-                      <p className="text-[10px] font-black uppercase tracking-widest text-ink-2">
-                        Deadline: {new Date(t.dueDate).toLocaleDateString('id-ID')}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-[11px] font-medium text-ink-3 text-center py-8 italic uppercase tracking-widest">Tidak ada tugas terbaru</p>
-              )}
+                </Link>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                {data.tugas.length > 0 ? (
+                    data.tugas.slice(0, 3).map((t, i) => (
+                    <Link key={i} href="/dashboard/siswa/tugas">
+                        <div className="p-5 rounded-[24px] border border-border bg-white hover:border-indigo/30 transition-all">
+                            <div className="flex justify-between items-start mb-2">
+                                <p className="text-[13px] font-black text-ink tracking-tight uppercase leading-none">{t.judul}</p>
+                            </div>
+                            <p className="text-[10px] font-bold text-ink-3 uppercase tracking-widest mb-4 opacity-70">{t.mapel.nama}</p>
+                            <div className="flex items-center gap-2 py-2 px-3 bg-cream/30 border border-border/40 rounded-xl">
+                                <Clock size={12} className="text-ink-3" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-ink-2">
+                                Deadline: {new Date(t.dueDate).toLocaleDateString('id-ID')}
+                                </p>
+                            </div>
+                        </div>
+                    </Link>
+                    ))
+                ) : (
+                    <p className="text-[11px] font-medium text-ink-3 text-center py-8 italic uppercase tracking-widest">Tidak ada tugas terbaru</p>
+                )}
+                </div>
             </div>
-          </div>
         </div>
 
       </div>
