@@ -250,12 +250,11 @@ export default function AbsensiClient({ teacherId, assignedClasses }) {
             
             <div className="grid grid-cols-7 gap-1">
                {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={i} />)}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const d = i + 1;
-                  const targetDate = new Date(viewYear, viewMonth, d);
-                  const fullDate = getLocalDateString(targetDate);
-                  const isSelected = selectedDate === fullDate;
-                  const isFuture = targetDate > new Date().setHours(23, 59, 59, 999);
+               {Array.from({ length: daysInMonth }).map((_, i) => {
+                 const d = i + 1;
+                 const fullDate = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                 const isSelected = selectedDate === fullDate;
+                 const isFuture = new Date(fullDate) > new Date().setHours(23, 59, 59, 999);
 
                  return (
                    <button 

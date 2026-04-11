@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
 }
 
 enum Role {
@@ -88,7 +89,7 @@ model MataPelajaran {
   id        String   @id @default(cuid())
   nama      String   @unique
   kode      String?  @unique
-  kelompok  String?  // e.g. "Kelompok A (Umum)"
+  kategori  String?  // e.g. "umum", "agama", "kejuruan"
   teachers  Teacher[]
   pengampu  Pengampu[]
   materi    Materi[]

@@ -1,27 +1,66 @@
 async function seedMapel(prisma) {
-  console.log("Seeding Mata Pelajaran...");
+  console.log("Starting Resilient Subject Update...");
 
   const mapels = [
-    { nama: "Pendidikan Agama dan Budi Pekerti", kode: "PAIBP", kelompok: "Kelompok A (Umum)" },
-    { nama: "Pendidikan Pancasila dan Kewarganegaraan", kode: "PPKN", kelompok: "Kelompok A (Umum)" },
-    { nama: "Bahasa Indonesia", kode: "BINDO", kelompok: "Kelompok A (Umum)" },
-    { nama: "Matematika", kode: "MTK-1", kelompok: "Kelompok A (Umum)" },
-    { nama: "Sejarah Indonesia", kode: "SEJIND", kelompok: "Kelompok A (Umum)" },
-    { nama: "Bahasa Inggris", kode: "BING", kelompok: "Kelompok A (Umum)" },
-    { nama: "Seni Budaya", kode: "SENBUD", kelompok: "Kelompok B (Umum)" },
-    { nama: "Pendidikan Jasmani, Olahraga & Kesehatan", kode: "PJOK", kelompok: "Kelompok B (Umum)" },
-    { nama: "Simulasi dan Komunikasi Digital", kode: "SISKOMDIG", kelompok: "Kelompok C (Kejuruan)" },
+    // Umum
+    { nama: "Pendidikan Pancasila", kode: "PP", kategori: "umum" },
+    { nama: "Bahasa Indonesia", kode: "BINDO", kategori: "umum" },
+    { nama: "Matematika", kode: "MTK", kategori: "umum" },
+    { nama: "IPA", kode: "IPA", kategori: "umum" },
+    { nama: "IPS", kode: "IPS", kategori: "umum" },
+    { nama: "Bahasa Inggris", kode: "BING", kategori: "umum" },
+    { nama: "PJOK", kode: "PJOK", kategori: "umum" },
+    { nama: "Informatika", kode: "INFO", kategori: "umum" },
+    { nama: "Seni Budaya dan Prakarya", kode: "SBDP", kategori: "umum" },
+    { nama: "Muatan Lokal", kode: "MULOK", kategori: "umum" },
+
+    // Agama
+    { nama: "Al-Qur’an Hadits", kode: "QH", kategori: "agama" },
+    { nama: "Akidah Akhlak", kode: "AA", kategori: "agama" },
+    { nama: "Fikih", kode: "FIKIH", kategori: "agama" },
+    { nama: "Sejarah Kebudayaan Islam", kode: "SKI", kategori: "agama" },
+    { nama: "Bahasa Arab", kode: "BARAB", kategori: "agama" },
+
+    // Kejuruan
+    { nama: "Koding dan Kecerdasan Artifisial", kode: "AI-KODE", kategori: "kejuruan" },
   ];
 
   for (const item of mapels) {
-    await prisma.mataPelajaran.upsert({
-      where: { nama: item.nama },
-      update: item,
-      create: item,
-    });
+    try {
+      // Find existing by Name OR Code
+      const existing = await prisma.mataPelajaran.findFirst({
+        where: {
+          OR: [
+            { nama: item.nama },
+            { kode: item.kode }
+          ]
+        }
+      });
+
+      if (existing) {
+        // Update existing to prevent unique constraint failures and preserve IDs
+        await prisma.mataPelajaran.update({
+          where: { id: existing.id },
+          data: {
+            nama: item.nama,
+            kode: item.kode,
+            kategori: item.kategori
+          }
+        });
+        console.log(`- Updated: ${item.nama}`);
+      } else {
+        // Create new
+        await prisma.mataPelajaran.create({
+          data: item
+        });
+        console.log(`- Created: ${item.nama}`);
+      }
+    } catch (error) {
+      console.error(`- Failed to process ${item.nama}:`, error.message);
+    }
   }
 
-  console.log("✅ Mata Pelajaran seeded.");
+  console.log("✅ Subject categories successfully updated.");
 }
 
 module.exports = { seedMapel };

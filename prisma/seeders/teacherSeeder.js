@@ -5,8 +5,8 @@ async function seedTeachers(prisma) {
   const hashedPassword = await bcrypt.hash("123", 10);
 
   // Fetch dependencies
-  const mapelSiskomdig = await prisma.mataPelajaran.findUnique({ where: { kode: "SISKOMDIG" } });
-  const mapelMTK = await prisma.mataPelajaran.findUnique({ where: { kode: "MTK-1" } });
+  const mapelSiskomdig = await prisma.mataPelajaran.findUnique({ where: { kode: "AI-KODE" } });
+  const mapelMTK = await prisma.mataPelajaran.findUnique({ where: { kode: "MTK" } });
   const classX = await prisma.kelas.findUnique({ where: { nama: "X RPL 1" } });
   const tahunAjaran = await prisma.tahunAjaran.findFirst({ where: { isActive: true } });
 
@@ -31,7 +31,14 @@ async function seedTeachers(prisma) {
     const hashedPassword = await bcrypt.hash("123", 10);
     const user = await prisma.user.upsert({
       where: { username: t.username },
-      update: {},
+      update: {
+        name: t.name,
+        teacherProfile: {
+          update: {
+            mapelId: t.mapelId
+          }
+        }
+      },
       create: {
         username: t.username,
         password: hashedPassword,

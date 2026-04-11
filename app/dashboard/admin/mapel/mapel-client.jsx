@@ -31,7 +31,7 @@ export default function MapelClient({ initialData }) {
   }, [initialData]);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Semua Kelompok");
+  const [selectedCategory, setSelectedCategory] = useState("Semua Kategori");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -50,22 +50,20 @@ export default function MapelClient({ initialData }) {
   const [formData, setFormData] = useState({
     nama: "",
     kode: "",
-    kelompok: "Kelompok A (Umum)"
+    kategori: "umum"
   });
 
   const categories = [
-    "Semua Kelompok",
-    "Kelompok A (Umum)",
-    "Kelompok B (Umum)",
-    "Kelompok C (Kejuruan)",
-    "Lainnya"
+    "Semua Kategori",
+    "umum",
+    "agama",
+    "kejuruan"
   ];
 
-  const kelompokColors = {
-    "Kelompok A (Umum)": "bg-indigo-100 text-indigo-800 border-indigo-200",
-    "Kelompok B (Umum)": "bg-blue-100 text-blue-800 border-blue-200",
-    "Kelompok C (Kejuruan)": "bg-purple-100 text-purple-800 border-purple-200",
-    "Lainnya": "bg-slate-100 text-slate-700 border-slate-200",
+  const kategoriColors = {
+    "umum": "bg-indigo-100 text-indigo-800 border-indigo-200",
+    "agama": "bg-blue-100 text-blue-800 border-blue-200",
+    "kejuruan": "bg-purple-100 text-purple-800 border-purple-200",
   };
 
   // Logic Filtering (FIXED: Separating Search and Category)
@@ -74,7 +72,7 @@ export default function MapelClient({ initialData }) {
     return data.filter(item => {
       const matchSearch = item.nama.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          (item.kode && item.kode.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchCategory = selectedCategory === "Semua Kelompok" || item.kelompok === selectedCategory;
+      const matchCategory = selectedCategory === "Semua Kategori" || item.kategori === selectedCategory;
       return matchSearch && matchCategory;
     });
   }, [data, searchTerm, selectedCategory]);
@@ -88,13 +86,13 @@ export default function MapelClient({ initialData }) {
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const resetForm = () => {
-    setFormData({ nama: "", kode: "", kelompok: "Kelompok A (Umum)" });
+    setFormData({ nama: "", kode: "", kategori: "umum" });
     setEditingId(null);
     setFormErrors({});
   };
 
   const handleEdit = (item) => {
-    setFormData({ nama: item.nama, kode: item.kode || "", kelompok: item.kelompok || "Kelompok A (Umum)" });
+    setFormData({ nama: item.nama, kode: item.kode || "", kategori: item.kategori || "umum" });
     setEditingId(item.id);
     setIsModalOpen(true);
   };
@@ -181,7 +179,7 @@ export default function MapelClient({ initialData }) {
     if (count > 0) {
       toast({
         title: "Tidak Dapat Menghapus",
-        description: "Mata pelajaran ini masih diampu oleh beberapa guru.",
+        description: "Mata pelajaran ini masih memiliki jadwal pengampu aktif.",
         variant: "destructive",
       });
       return;
@@ -209,7 +207,7 @@ export default function MapelClient({ initialData }) {
 
            <div className="flex items-center gap-3">
               <button 
-                onClick={() => { setEditingMapel(null); setIsModalOpen(true); }}
+                onClick={() => { resetForm(); setIsModalOpen(true); }}
                 className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
               >
                 <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Mata Pelajaran
@@ -248,14 +246,14 @@ export default function MapelClient({ initialData }) {
           {categories.slice(1).map(cat => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(selectedCategory === cat ? "Semua Kelompok" : cat)}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? "Semua Kategori" : cat)}
               className={`px-5 py-2 rounded-xl text-[10px] uppercase font-black tracking-widest whitespace-nowrap transition-all border ${
                 selectedCategory === cat 
                 ? "bg-indigo text-white border-indigo shadow-md shadow-indigo/20 scale-105" 
                 : "bg-surface border-border text-ink-3 hover:border-indigo/50"
               }`}
             >
-              {cat.split(" ")[1] || cat}
+              {cat}
             </button>
           ))}
         </div>
@@ -269,7 +267,7 @@ export default function MapelClient({ initialData }) {
               <tr>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3">No</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3">Mata Pelajaran</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Kelompok</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Kategori</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Pengampu</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3 text-right">Aksi</th>
               </tr>
@@ -293,20 +291,20 @@ export default function MapelClient({ initialData }) {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold border ${kelompokColors[item.kelompok] || kelompokColors["Lainnya"]}`}>
-                         {item.kelompok || "N/A"}
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-bold border ${kategoriColors[item.kategori] || "bg-slate-100 text-slate-700 border-slate-200"}`}>
+                         {item.kategori || "N/A"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-light/30 border border-indigo/5 text-[12px] font-bold text-indigo">
                          <Users size={14} />
-                         <span>{item._count.teachers} <span className="font-medium text-ink-3">Guru</span></span>
+                         <span>{item._count.pengampu} <span className="font-medium text-ink-3">Pengampu</span></span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => handleEdit(item)} className="p-2 text-ink-3 hover:text-indigo hover:bg-indigo-light rounded-lg transition-all"><Edit size={16} /></button>
-                        <button onClick={() => openDeleteConfirm(item.id, item._count.teachers)} className="p-2 text-ink-3 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                        <button onClick={() => openDeleteConfirm(item.id, item._count.pengampu)} className="p-2 text-ink-3 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
@@ -351,12 +349,21 @@ export default function MapelClient({ initialData }) {
             
             <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-cream/30">
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-indigo/10 flex items-center justify-center text-indigo border border-indigo/5">
+                <div className={cn(
+                  "w-11 h-11 rounded-2xl flex items-center justify-center border",
+                  editingId 
+                    ? "bg-amber-100 text-amber-600 border-amber-200" 
+                    : "bg-indigo/10 text-indigo border-indigo/5"
+                )}>
                   {editingId ? <Edit size={22} /> : <Plus size={22} />}
                 </div>
                 <div>
-                  <h2 className="text-lg font-extrabold text-ink leading-none">{editingId ? "Update Data Mapel" : "Input Mapel Baru"}</h2>
-                  <p className="text-[9px] text-ink-3 mt-1.5 font-bold uppercase tracking-widest">Informasi Mata Pelajaran</p>
+                  <h2 className="text-lg font-extrabold text-ink leading-none">
+                    {editingId ? "Perbarui Mata Pelajaran" : "Tambah Mata Pelajaran Baru"}
+                  </h2>
+                  <p className="text-[9px] text-ink-3 mt-1.5 font-bold uppercase tracking-widest">
+                    {editingId ? "Pastikan data sudah benar sebelum disimpan" : "Lengkapi informasi kurikulum di bawah"}
+                  </p>
                 </div>
               </div>
               <button 
@@ -386,22 +393,28 @@ export default function MapelClient({ initialData }) {
                   <input 
                     type="text" 
                     placeholder="Contoh: MTK-1" 
-                    className="px-5 py-3.5 bg-cream/50 border border-border rounded-xl text-[13px] font-mono font-bold"
+                    readOnly={!!editingId}
+                    className={cn(
+                      "px-5 py-3.5 border rounded-xl text-[13px] font-mono font-bold transition-all",
+                      editingId 
+                        ? "bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed" 
+                        : "bg-cream/50 border-border focus:ring-4 focus:ring-indigo/10"
+                    )}
                     value={formData.kode}
                     onChange={(e) => setFormData({ ...formData, kode: e.target.value })}
                   />
+                  {editingId && <p className="text-[9px] text-amber-600 font-bold mt-1 ml-1 opacity-70 italic">* Kode tidak dapat diubah setelah dibuat</p>}
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-[9px] font-bold text-ink-3 uppercase ml-1 tracking-widest">Kelompok Kurikulum</label>
                   <select 
                     className="px-5 py-3.5 bg-cream/50 border border-border rounded-xl text-[13px] font-bold"
-                    value={formData.kelompok}
-                    onChange={(e) => setFormData({ ...formData, kelompok: e.target.value })}
+                    value={formData.kategori}
+                    onChange={(e) => setFormData({ ...formData, kategori: e.target.value })}
                   >
-                    <option value="Kelompok A (Umum)">Kelompok A (Umum)</option>
-                    <option value="Kelompok B (Umum)">Kelompok B (Umum)</option>
-                    <option value="Kelompok C (Kejuruan)">Kelompok C (Kejuruan)</option>
-                    <option value="Lainnya">Lainnya</option>
+                    <option value="umum">Umum</option>
+                    <option value="agama">Agama</option>
+                    <option value="kejuruan">Kejuruan</option>
                   </select>
                 </div>
               </div>
@@ -414,13 +427,18 @@ export default function MapelClient({ initialData }) {
                 >
                   Batal
                 </button>
-                <button 
+                  <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="flex-1 py-3.5 bg-indigo text-white rounded-2xl text-[10px] font-extrabold shadow-lg shadow-indigo/20 hover:bg-indigo-hover transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                  className={cn(
+                    "flex-1 py-3.5 text-white rounded-2xl text-[10px] font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest",
+                    editingId 
+                      ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20" 
+                      : "bg-indigo hover:bg-indigo-hover shadow-indigo/20"
+                  )}
                 >
                   {isLoading && <Loader2 size={14} className="animate-spin" />}
-                  {editingId ? "Simpan Perubahan" : "Simpan Mapel"}
+                  {editingId ? "Simpan Perubahan" : "Simpan Mata Pelajaran"}
                 </button>
               </div>
             </form>
