@@ -1,5 +1,4 @@
-"use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Upload,
   CheckCircle2,
@@ -9,68 +8,11 @@ import {
   X,
   Paperclip,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
-
-/* ── Data ───────────────────────────────────── */
-const daftarTugas = [
-  {
-    id: 1,
-    mapel: "Matematika",
-    warna: "#0EA5A0",
-    judul: "Latihan Soal Integral",
-    guru: "Pak Hendra",
-    deadline: "Besok, 23:59",
-    deskripsi:
-      "Kerjakan soal integral hal. 45–47 buku paket. Upload dalam format PDF.",
-    status: "belum",
-    poin: 100,
-  },
-  {
-    id: 2,
-    mapel: "Matematika",
-    warna: "#0EA5A0",
-    judul: "Kuis Turunan Fungsi",
-    guru: "Pak Hendra",
-    deadline: "Kamis, 23:59",
-    deskripsi: "Kerjakan 10 soal turunan fungsi aljabar.",
-    status: "belum",
-    poin: 50,
-  },
-  {
-    id: 3,
-    mapel: "Fisika",
-    warna: "#F59E0B",
-    judul: "Laporan Praktikum Gelombang",
-    guru: "Pak Rudi",
-    deadline: "Jum'at, 23:59",
-    deskripsi: "Buat laporan praktikum sesuai format.",
-    status: "belum",
-    poin: 100,
-  },
-  {
-    id: 4,
-    mapel: "Fisika",
-    warna: "#F59E0B",
-    judul: "Rangkuman Bab Cahaya",
-    guru: "Pak Rudi",
-    deadline: "Senin, 23:59",
-    deskripsi: "Buat rangkuman materi cahaya.",
-    status: "dinilai",
-    poin: 50,
-    nilaiDapat: 45,
-  },
-  {
-    id: 5,
-    mapel: "B. Indonesia",
-    warna: "#6366F1",
-    judul: "Esai Argumentatif",
-    guru: "Bu Sari",
-    deadline: "Senin, 23:59",
-    deskripsi: "Tulis esai 500 kata.",
-    status: "dikumpulkan",
-    poin: 100,
-  },
-];
+import { useAuth } from "@/app/lib/AuthContext";
+import { getStudentTugasPageAction, submitTugasAction } from "@/lib/actions/siswa-actions";
+import { toast } from "sonner";
 
 const statusCfg = {
   belum: {
@@ -93,31 +35,95 @@ const statusCfg = {
   },
 };
 
-/* group mapel */
-const grouped = daftarTugas.reduce((acc, t) => {
-  (acc[t.mapel] ??= { warna: t.warna, items: [] }).items.push(t);
-  return acc;
-}, {});
+const getMapelStyle = (mapelName) => {
+    const name = mapelName.toLowerCase();
+    if (name.includes("matematika") || name.includes("ipa")) return "#0EA5A0";
+    if (name.includes("islam") || name.includes("agama") || name.includes("fikih") || name.includes("hadits")) return "#F59E0B";
+    if (name.includes("indonesia") || name.includes("inggris") || name.includes("arab")) return "#6366F1";
+    if (name.includes("informatika")) return "#8B5CF6";
+    return "#EC4899";
+};
 
 export default function TugasPage() {
-  const [open, setOpen] = useState({ [Object.keys(grouped)[0]]: true });
+  const { user } = useAuth();
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState({});
   const [selected, setSelected] = useState(null);
   const [file, setFile] = useState(null);
   const [catatan, setCatatan] = useState("");
-  const [submitted, setSubmitted] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchTugas = async () => {
+    if (user?.studentId && user?.kelasId) {
+      const res = await getStudentTugasPageAction(user.studentId, user.kelasId);
+      if (res.success) {
+        setData(res.data);
+      }
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchTugas();
+    }
+  }, [user]);
+
+  const grouped = useMemo(() => {
+    return data.reduce((acc, t) => {
+      const mapelName = t.mapel.nama;
+      (acc[mapelName] ??= { warna: getMapelStyle(mapelName), items: [] }).items.push(t);
+      return acc;
+    }, {});
+  }, [data]);
+
+  useEffect(() => {
+      if (Object.keys(grouped).length > 0 && Object.keys(open).length === 0) {
+          setOpen({ [Object.keys(grouped)[0]]: true });
+      }
+  }, [grouped]);
 
   const toggle = (mapel) => setOpen((p) => ({ ...p, [mapel]: !p[mapel] }));
 
-  const submit = (id) => {
-    setSubmitted((p) => [...p, id]);
-    setSelected(null);
-    setFile(null);
-    setCatatan("");
+  const handleSubmit = async () => {
+    if (!selected || !user?.studentId) return;
+    setSubmitting(true);
+    
+    // In a real app we'd upload the file first and get a URL.
+    // Here we'll simulate the URL since the backend field expects a string.
+    const fakeFileUrl = file ? `/uploads/submissions/${file.name}` : null;
+
+    const res = await submitTugasAction({
+      tugasId: selected.id,
+      studentId: user.studentId,
+      fileUrl: fakeFileUrl
+    });
+
+    if (res.success) {
+      toast.success("Tugas berhasil dikumpulkan!");
+      fetchTugas(); // Refresh data
+      setSelected(null);
+      setFile(null);
+      setCatatan("");
+    } else {
+      toast.error(res.error || "Gagal mengumpulkan tugas");
+    }
+    setSubmitting(false);
   };
 
-  const totalBelum = daftarTugas.filter(
-    (t) => !submitted.includes(t.id) && t.status === "belum",
-  ).length;
+  const totalBelum = useMemo(() => {
+    return data.filter(t => t.submissions.length === 0).length;
+  }, [data]);
+
+  if (loading) {
+      return (
+        <div className="p-12 flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo" />
+          <p className="text-[11px] font-black uppercase tracking-widest text-zinc-400">Sinkronisasi Tugas...</p>
+        </div>
+      );
+  }
 
   return (
     <div className="p-8 flex flex-col gap-6 animate-[slideUp_.3s_ease]">
@@ -125,10 +131,8 @@ export default function TugasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-zinc-900">Daftar Tugas</h1>
-
           <p className="text-xs text-zinc-400 mt-1">
-            {totalBelum} tugas belum dikumpulkan · {Object.keys(grouped).length}{" "}
-            mata pelajaran
+            {totalBelum} tugas belum dikumpulkan untuk kelas {user?.kelas || "Anda"}
           </p>
         </div>
 
@@ -140,102 +144,65 @@ export default function TugasPage() {
       </div>
 
       {/* ACCORDION */}
-
       <div className="flex flex-col gap-3">
         {Object.entries(grouped).map(([mapel, { warna, items }]) => {
           const isOpen = open[mapel];
-          const belum = items.filter(
-            (t) => !submitted.includes(t.id) && t.status === "belum",
-          ).length;
+          const belumCount = items.filter(t => t.submissions.length === 0).length;
 
           return (
             <div
               key={mapel}
               className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden"
             >
-              {/* HEADER */}
               <button
                 onClick={() => toggle(mapel)}
                 className="w-full flex items-center gap-3 px-5 py-4 hover:bg-zinc-50 transition"
               >
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ background: warna }}
-                />
-
-                <p className="flex-1 text-left font-semibold text-sm text-zinc-900">
-                  {mapel}
-                </p>
-
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: warna }} />
+                <p className="flex-1 text-left font-semibold text-sm text-zinc-900">{mapel}</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-400">
-                    {items.length} tugas
-                  </span>
-
-                  {belum > 0 ? (
+                  <span className="text-xs text-zinc-400">{items.length} tugas</span>
+                  {belumCount > 0 ? (
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">
-                      {belum} belum
+                      {belumCount} belum
                     </span>
                   ) : (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-600">
-                      ✓ selesai
-                    </span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-600">✓ selesai</span>
                   )}
                 </div>
-
-                <ChevronDown
-                  size={16}
-                  className={`text-zinc-400 transition ${isOpen ? "rotate-180" : ""}`}
-                />
+                <ChevronDown size={16} className={`text-zinc-400 transition ${isOpen ? "rotate-180" : ""}`} />
               </button>
-
-              {/* BODY */}
 
               {isOpen && (
                 <div className="flex flex-col">
-                  {items.map((tugas, idx) => {
-                    const st = submitted.includes(tugas.id)
-                      ? "dikumpulkan"
-                      : tugas.status;
+                  {items.map((tugas) => {
+                    const submission = tugas.submissions[0];
+                    let st = "belum";
+                    if (submission) {
+                        st = submission.nilai !== null ? "dinilai" : "dikumpulkan";
+                    }
                     const cfg = statusCfg[st];
                     const Icon = cfg.icon;
 
                     return (
-                      <div
-                        key={tugas.id}
-                        className="flex gap-4 px-5 py-4 border-t border-zinc-100"
-                      >
-                        <div
-                          className="w-1 rounded"
-                          style={{ background: warna }}
-                        />
-
+                      <div key={tugas.id} className="flex gap-4 px-5 py-4 border-t border-zinc-100">
+                        <div className="w-1 rounded" style={{ background: warna }} />
                         <div className="flex-1">
                           <div className="flex flex-wrap gap-2 mb-2">
-                            <span
-                              className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full ${cfg.bg} ${cfg.c}`}
-                            >
+                            <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full ${cfg.bg} ${cfg.c}`}>
                               <Icon size={10} /> {cfg.label}
                             </span>
-
                             {st === "dinilai" && (
                               <span className="text-[11px] font-semibold px-2 py-1 rounded-full bg-green-50 text-green-600">
-                                Nilai {tugas.nilaiDapat}/{tugas.poin}
+                                Nilai {submission.nilai}/100
                               </span>
                             )}
                           </div>
-
-                          <p className="font-semibold text-sm text-zinc-900">
-                            {tugas.judul}
-                          </p>
-
+                          <p className="font-semibold text-sm text-zinc-900">{tugas.judul}</p>
                           <p className="text-xs text-zinc-400 mb-1">
-                            {tugas.guru} · 🕐 Deadline : {tugas.deadline}
+                            {tugas.teacher?.user?.name || "Guru"} · 🕐 Deadline : {tugas.dueDate ? new Date(tugas.dueDate).toLocaleString('id-ID') : "Tanpa Batas"}
                           </p>
-
-                          <p className="text-sm text-zinc-600">
-                            {tugas.deskripsi}
-                          </p>
+                          <p className="text-sm text-zinc-600">{tugas.deskripsi || "Tidak ada deskripsi."}</p>
                         </div>
 
                         {st === "belum" && (
@@ -257,67 +224,51 @@ export default function TugasPage() {
       </div>
 
       {/* MODAL */}
-
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl animate-[slideUp_.2s_ease]">
             <div className="flex justify-between mb-4">
               <div>
-                <span className="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-700">
-                  {selected.mapel}
-                </span>
-
+                <span className="text-xs px-2 py-1 rounded-full bg-zinc-100 text-zinc-700">{selected.mapel.nama}</span>
                 <h2 className="font-bold mt-2">{selected.judul}</h2>
-
                 <p className="text-xs text-zinc-400">
-                  {selected.guru} · deadline : {selected.deadline}
+                  {selected.teacher?.user?.name} · deadline : {selected.dueDate ? new Date(selected.dueDate).toLocaleString('id-ID') : "Tanpa Batas"}
                 </p>
               </div>
-
-              <button
-                onClick={() => setSelected(null)}
-                className="w-8 h-8 flex items-center justify-center border rounded-lg cursor-pointer"
-              >
+              <button onClick={() => setSelected(null)} className="w-8 h-8 flex items-center justify-center border rounded-lg cursor-pointer hover:bg-zinc-50">
                 <X size={14} />
               </button>
             </div>
 
-            <label className="border-2 border-dashed border-zinc-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-50">
+            <label className="border-2 border-dashed border-zinc-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-50 transition-colors">
               {file ? (
                 <>
                   <FileText size={24} className="text-teal-500" />
-                  <p className="text-sm font-semibold text-teal-600">
-                    {file.name}
-                  </p>
+                  <p className="text-sm font-semibold text-teal-600 mt-2">{file.name}</p>
                 </>
               ) : (
                 <>
                   <Paperclip size={24} className="text-zinc-400" />
-                  <p className="text-sm">Klik untuk upload file</p>
+                  <p className="text-sm mt-2 text-zinc-500">Klik untuk upload file jawaban</p>
                 </>
               )}
-
-              <input
-                type="file"
-                hidden
-                onChange={(e) => setFile(e.target.files[0])}
-              />
+              <input type="file" hidden onChange={(e) => setFile(e.target.files[0])} />
             </label>
 
             <textarea
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
-              placeholder="Catatan untuk guru..."
-              className="w-full mt-3 p-3 text-sm border border-zinc-300 rounded-lg bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
+              placeholder="Catatan pengerjaan..."
+              className="w-full mt-3 p-3 text-sm border border-zinc-300 rounded-lg bg-zinc-50 focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
 
             <button
-              disabled={!file}
-              onClick={() => submit(selected.id)}
-              className="w-full mt-4 py-2 font-semibold text-white bg-teal-500 rounded-lg disabled:opacity-40 cursor-pointer"
+              disabled={!file || submitting}
+              onClick={handleSubmit}
+              className="w-full mt-4 py-2.5 font-semibold text-white bg-teal-500 rounded-lg disabled:opacity-40 hover:bg-teal-600 transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Upload size={14} className="inline mr-1" />
-              Kumpulkan Tugas
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {submitting ? "Mengirim..." : "Kumpulkan Tugas"}
             </button>
           </div>
         </div>
