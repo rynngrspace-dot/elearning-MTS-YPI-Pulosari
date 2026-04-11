@@ -155,9 +155,9 @@ export default function TeacherStudentsPage() {
                         <span className="text-xs">{student.noHpOrangTua || "-"}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                        <div className="relative inline-block group/tooltip">
-                          <button className="p-2 text-indigo hover:bg-indigo/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer" title="Lihat Profil">
+                          <button className="p-2 text-indigo hover:bg-indigo/10 rounded-lg transition-all cursor-pointer" title="Lihat Profil">
                             <Eye size={18} />
                           </button>
                           {/* Tooltip */}
