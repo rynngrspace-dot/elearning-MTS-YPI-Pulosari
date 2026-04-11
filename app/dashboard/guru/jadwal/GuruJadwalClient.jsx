@@ -1,31 +1,18 @@
 "use client";
 
-import { CalendarClock, Clock, School, Users, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { CalendarClock, Clock, School, Users, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const dayOrder = { "Senin": 1, "Selasa": 2, "Rabu": 3, "Kamis": 4, "Jumat": 5, "Sabtu": 6, "Minggu": 7 };
 
 export default function GuruJadwalClient({ initialSchedule }) {
-  // Use today's day as default if possible, otherwise Monday
-  const today = new Intl.DateTimeFormat('id-ID', { weekday: 'long' }).format(new Date());
-  const defaultDay = DAYS.includes(today) ? today : "Senin";
-  
-  const [activeDay, setActiveDay] = useState(defaultDay);
-
-  // Group schedule by day for the main view
-  const groupedSchedule = initialSchedule.reduce((acc, item) => {
-    if (!acc[item.hari]) acc[item.hari] = [];
-    acc[item.hari].push(item);
-    return acc;
-  }, {});
-
-  // Sort items by start time
-  Object.keys(groupedSchedule).forEach(day => {
-    groupedSchedule[day].sort((a, b) => (a.jamMulai || "").localeCompare(b.jamMulai || ""));
+  // Sort schedule chronologically by day and then time
+  const sortedSchedule = [...initialSchedule].sort((a, b) => {
+    if (dayOrder[a.hari] !== dayOrder[b.hari]) {
+      return dayOrder[a.hari] - dayOrder[b.hari];
+    }
+    return (a.jamMulai || "").localeCompare(b.jamMulai || "");
   });
-
-  const activeItems = groupedSchedule[activeDay] || [];
 
   return (
     <div className="p-8 flex flex-col gap-8 animate-fadeIn">
@@ -37,78 +24,98 @@ export default function GuruJadwalClient({ initialSchedule }) {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-1.5">
-              <span className="px-2.5 py-1 bg-indigo-500 text-white text-[9px] font-bold rounded-lg uppercase tracking-[0.2em]">Pusat Akademik</span>
+              <span className="px-2.5 py-1 bg-indigo-500 text-white text-[10px] font-bold rounded-lg uppercase tracking-[0.2em]">Sistem Akademik</span>
               <div className="h-1 w-1 rounded-full bg-border" />
-              <p className="text-[9px] text-ink-3 font-bold uppercase tracking-widest leading-none">Time Management</p>
+              <p className="text-[10px] text-ink-3 font-bold uppercase tracking-widest leading-none">Weekly Schedule</p>
             </div>
-            <h1 className="text-2xl font-bold text-ink tracking-tight uppercase leading-none">Jadwal Mengajar</h1>
+            <h1 className="text-2xl font-bold text-ink tracking-tight uppercase leading-none">Jadwal Mengajar Anda</h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-white border border-border rounded-xl shadow-sm flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-xs font-bold text-ink-2">{sortedSchedule.length} Sesi Terjadwal</span>
           </div>
         </div>
       </div>
 
-      {/* DAY NAVIGATION */}
-      <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative group">
-         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-            <div>
-               <h3 className="text-lg font-bold text-ink uppercase tracking-tight leading-none mb-1.5">Pilih Hari</h3>
-               <p className="text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-60">Klik untuk melihat jadwal harian</p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-               {DAYS.map((d) => (
-                 <button 
-                   key={d} 
-                   onClick={() => setActiveDay(d)}
-                   className={cn(
-                     "px-5 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all border",
-                     activeDay === d 
-                       ? "bg-indigo text-white border-indigo shadow-md shadow-indigo/10" 
-                       : "bg-cream text-ink-3 hover:bg-indigo-light hover:text-indigo border-border/50"
-                   )}
-                 >
-                   {d}
-                 </button>
-               ))}
-            </div>
-         </div>
-      </div>
-
-      {/* SCHEDULE VIEW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {activeItems.length > 0 ? activeItems.map((item, idx) => (
-          <div key={idx} className="bg-surface border border-border rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-indigo/20 transition-all group relative overflow-hidden">
-             <div className="flex items-center justify-between mb-5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-light flex items-center justify-center text-indigo shadow-inner group-hover:bg-indigo group-hover:text-white transition-all">
-                   <Clock size={18} strokeWidth={2.5} />
-                </div>
-                <div className="text-right">
-                   <p className="text-[8px] font-bold text-ink-3 uppercase tracking-[0.2em] mb-1">Waktu Sesi</p>
-                   <span className="text-[11px] font-bold text-ink uppercase tabular-nums">
-                     {item.jamMulai} - {item.jamSelesai}
-                   </span>
-                </div>
-             </div>
-
-             <div className="mb-6">
-                <h5 className="text-[15px] font-bold text-ink uppercase tracking-tight mb-1">{item.mapel}</h5>
-                <div className="flex items-center gap-2 text-[9px] font-bold text-ink-3 uppercase tracking-widest">
-                   <School size={12} className="text-indigo/60" /> Kelas {item.kelas}
-                </div>
-             </div>
-
-             <div className="pt-5 border-t border-border/50 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-70">
-                   <Users size={12} className="text-indigo/60" /> {item.siswa} Siswa Terdaftar
-                </div>
-                <div className="w-2 h-2 rounded-full bg-indigo animate-pulse" title="Sesi Sesuai Jadwal" />
-             </div>
-          </div>
-        )) : (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-30 grayscale lowercase border-2 border-dashed border-border rounded-2xl">
-             <CalendarClock size={48} className="mb-4" />
-             <p className="text-[10px] font-bold uppercase tracking-widest">Tidak ada jadwal mengajar pada hari {activeDay}</p>
-          </div>
-        )}
+      {/* TABLE SECTION */}
+      <div className="bg-surface border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-zinc-50 border-b border-border">
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] w-16">No</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] w-32">Hari</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em]">Mata Pelajaran</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-center">Kelas</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-center">Waktu</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-center">Siswa</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-ink-3 uppercase tracking-[0.15em] text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {sortedSchedule.length > 0 ? sortedSchedule.map((item, idx) => (
+                <tr key={idx} className="group hover:bg-indigo-light/20 transition-colors">
+                  <td className="px-6 py-4 text-[12px] tabular-nums font-bold text-ink-3 opacity-40">
+                    {(idx + 1).toString().padStart(2, '0')}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={cn(
+                      "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                      item.hari === "Senin" ? "bg-red-50 text-red-600" :
+                      item.hari === "Selasa" ? "bg-amber-50 text-amber-600" :
+                      item.hari === "Rabu" ? "bg-green-50 text-green-600" :
+                      item.hari === "Kamis" ? "bg-blue-50 text-blue-600" :
+                      item.hari === "Jumat" ? "bg-indigo-light text-indigo" :
+                      "bg-zinc-100 text-zinc-600"
+                    )}>
+                      {item.hari}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <p className="text-[14px] font-bold text-ink tracking-tight uppercase group-hover:text-indigo transition-colors">{item.mapel}</p>
+                      <p className="text-[10px] text-ink-3 font-medium opacity-60">Sesi Belajar Aktif</p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="inline-flex items-center justify-center px-4 py-1.5 bg-zinc-100 border border-border rounded-xl text-[12px] font-black text-ink-2 group-hover:bg-indigo group-hover:text-white transition-all shadow-sm">
+                      {item.kelas}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock size={14} className="text-ink-3 opacity-30" />
+                      <span className="text-[13px] font-bold text-ink tabular-nums">
+                        {item.jamMulai} - {item.jamSelesai}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Users size={14} className="text-ink-3 opacity-30" />
+                      <span className="text-[12px] font-bold text-ink-2 underline decoration-indigo/20 underline-offset-4">{item.siswa}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="inline-flex h-2 w-2 rounded-full bg-green-500 ring-4 ring-green-100/50" />
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan="7" className="px-6 py-24 text-center">
+                    <div className="flex flex-col items-center justify-center opacity-20 grayscale">
+                      <CalendarClock size={48} className="mb-4" />
+                      <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada jadwal mengajar yang terpetakan</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <style jsx>{`
