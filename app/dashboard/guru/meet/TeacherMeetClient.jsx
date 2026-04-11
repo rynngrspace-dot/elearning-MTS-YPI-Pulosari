@@ -146,7 +146,8 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
                     <>
                       <button
                         onClick={() => {
-                          const jitsiUrl = `https://meet.jit.si/${activeMeeting.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${userName || "Guru"}"`;
+                          const encodedName = encodeURIComponent(userName || "Guru");
+                          const jitsiUrl = `https://meet.jit.si/${activeMeeting.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${encodedName}"`;
                           window.open(jitsiUrl, "_blank");
                         }}
                         className="w-full py-3 bg-green-500 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-green-600 transition shadow-sm cursor-pointer"

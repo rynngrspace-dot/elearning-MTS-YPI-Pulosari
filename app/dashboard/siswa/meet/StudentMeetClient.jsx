@@ -90,7 +90,8 @@ export default function StudentMeetClient({ initialMeetings, kelasId, userName }
                 <div className="pt-2">
                    <button
                      onClick={() => {
-                       const jitsiUrl = `https://meet.jit.si/${meet.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${userName || "Siswa"}"`;
+                       const encodedName = encodeURIComponent(userName || "Siswa");
+                       const jitsiUrl = `https://meet.jit.si/${meet.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${encodedName}"`;
                        window.open(jitsiUrl, "_blank");
                      }}
                      className="w-full py-4 bg-indigo text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-dark transition shadow-lg shadow-indigo/10 cursor-pointer"
