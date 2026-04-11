@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
-import { createGuruAction, updateGuruAction, deleteGuruAction } from "@/lib/actions/guru-actions";
+import { createGuruAction, updateGuruAction, deleteGuruAction, bulkDeleteGuruAction } from "@/lib/actions/guru-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -71,6 +71,51 @@ export default function GuruClient({ initialTeachers, mapelList }) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+  const [selectedGuruIds, setSelectedGuruIds] = useState([]);
+
+  const toggleSelectGuru = (id) => {
+    setSelectedGuruIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedGuruIds.length === paginatedTeachers.length) {
+      setSelectedGuruIds([]);
+    } else {
+      setSelectedGuruIds(paginatedTeachers.map(t => t.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedGuruIds.length === 0) return;
+    
+    if (!confirm(`Hapus ${selectedGuruIds.length} guru terpilih secara permanen?`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await bulkDeleteGuruAction(selectedGuruIds);
+      if (res.success) {
+        toast({
+          title: "Berhasil!",
+          description: `${selectedGuruIds.length} data pengajar telah dihapus.`,
+          variant: "success",
+        });
+        setSelectedGuruIds([]);
+      } else {
+        toast({
+          title: "Gagal Menghapus",
+          description: res.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+       toast({ title: "Kesalahan", description: "Terjadi kesalahan saat menghapus data massal.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const filteredTeachers = useMemo(() => {
     setCurrentPage(1);
@@ -269,7 +314,15 @@ export default function GuruClient({ initialTeachers, mapelList }) {
               <table className="w-full text-left border-collapse">
                 <thead className="bg-cream/40">
                   <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Rank</th>
+                    <th className="px-6 py-5 w-[10px]">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                        checked={selectedGuruIds.length === paginatedTeachers.length && paginatedTeachers.length > 0}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="px-5 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Rank</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Nama & NIP</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Spesialisasi</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Kepegawaian</th>
@@ -278,8 +331,19 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {paginatedTeachers.map((guru, idx) => (
-                    <tr key={guru.id} className="hover:bg-cream/20 transition-all group">
-                      <td className="px-8 py-5 text-[13px] text-ink-3 font-black opacity-30">
+                    <tr key={guru.id} className={cn(
+                        "hover:bg-cream/20 transition-all group",
+                        selectedGuruIds.includes(guru.id) ? "bg-indigo-50/30" : ""
+                    )}>
+                      <td className="px-6 py-5">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                            checked={selectedGuruIds.includes(guru.id)}
+                            onChange={() => toggleSelectGuru(guru.id)}
+                          />
+                      </td>
+                      <td className="px-5 py-5 text-[13px] text-ink-3 font-black opacity-30">
                         {String((currentPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}
                       </td>
                       <td className="px-8 py-5">
@@ -311,6 +375,64 @@ export default function GuruClient({ initialTeachers, mapelList }) {
             </div>
         </div>
       </div>
+
+      {/* FLOATING ACTION BAR FOR BULK DELETE */}
+      {selectedGuruIds.length > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[101] animate-slideUp">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+               <div className="flex flex-col">
+                  <span className="text-[13px] font-black tracking-tight">{selectedGuruIds.length} Pengajar Terpilih</span>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
+               </div>
+               <div className="w-px h-8 bg-white/10" />
+               <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedGuruIds([])}
+                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                  >
+                    {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
+                    Hapus Permanen
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* FLOATING ACTION BAR FOR BULK DELETE */}
+      {selectedGuruIds.length > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[101] animate-slideUp">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+               <div className="flex flex-col">
+                  <span className="text-[13px] font-black tracking-tight">{selectedGuruIds.length} Pengajar Terpilih</span>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
+               </div>
+               <div className="w-px h-8 bg-white/10" />
+               <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedGuruIds([])}
+                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                  >
+                    {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
+                    Hapus Permanen
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
 
       {/* VIEW MODAL (PREMIUM) */}
       {viewingTeacher && (

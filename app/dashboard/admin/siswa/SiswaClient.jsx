@@ -25,7 +25,7 @@ import {
   School
 } from "lucide-react";
 import ConfirmModal from "@/components/shared/ConfirmModal";
-import { createSiswaAction, updateSiswaAction, deleteSiswaAction } from "@/lib/actions/siswa-actions";
+import { createSiswaAction, updateSiswaAction, deleteSiswaAction, importStudentsFromExcelAction, bulkDeleteSiswaAction } from "@/lib/actions/siswa-actions";
 
 const badge = (status) => {
   const isAktif = status === "Aktif";
@@ -64,10 +64,27 @@ export default function SiswaClient({ initialStudents, kelasList }) {
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Filtering logic
+  const [selectedSiswaIds, setSelectedSiswaIds] = useState([]);
+
+  const toggleSelectSiswa = (id) => {
+    setSelectedSiswaIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSiswaIds.length === paginatedStudents.length) {
+      setSelectedSiswaIds([]);
+    } else {
+      setSelectedSiswaIds(paginatedStudents.map(s => s.id));
+    }
+  };
   const filteredStudents = useMemo(() => {
     setCurrentPage(1);
     return students.filter(s => {
@@ -124,6 +141,64 @@ export default function SiswaClient({ initialStudents, kelasList }) {
   const openDeleteConfirm = (id) => {
     setStudentToDelete(id);
     setIsConfirmOpen(true);
+  };
+  
+  const handleImportExcel = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const file = formData.get("file");
+    
+    if (!file || file.size === 0) {
+      return toast({ title: "File Belum Dipilih", description: "Silakan pilih file excel terlebih dahulu.", variant: "destructive" });
+    }
+
+    setIsImporting(true);
+    try {
+      const res = await importStudentsFromExcelAction(formData);
+      if (res.success) {
+        toast({
+          title: "Import Berhasil!",
+          description: `${res.data.success} siswa berhasil ditambahkan.`,
+          variant: "success",
+        });
+        setIsImportModalOpen(false);
+      } else {
+        toast({ title: "Import Gagal", description: res.error, variant: "destructive" });
+      }
+    } catch (error) {
+       toast({ title: "Kesalahan Sistem", description: "Terjadi kesalahan saat memproses file.", variant: "destructive" });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedSiswaIds.length === 0) return;
+    
+    if (!confirm(`Hapus ${selectedSiswaIds.length} siswa terpilih secara permanen?`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await bulkDeleteSiswaAction(selectedSiswaIds);
+      if (res.success) {
+        toast({
+          title: "Berhasil!",
+          description: `${selectedSiswaIds.length} data siswa telah dihapus.`,
+          variant: "success",
+        });
+        setSelectedSiswaIds([]);
+      } else {
+        toast({
+          title: "Gagal Menghapus",
+          description: res.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+       toast({ title: "Kesalahan", description: "Terjadi kesalahan saat menghapus data massal.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -270,6 +345,13 @@ export default function SiswaClient({ initialStudents, kelasList }) {
             </div>
             
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-3 border border-indigo/20 rounded-2xl bg-indigo/5 text-indigo text-xs font-black hover:bg-indigo hover:text-white transition-all uppercase tracking-widest shadow-sm hover:shadow"
+              >
+                <FileText size={14} strokeWidth={2.5} />
+                Import Excel
+              </button>
               <button className="flex items-center gap-2 px-6 py-3 border border-border rounded-2xl bg-surface text-ink-2 text-xs font-black hover:bg-cream transition-all uppercase tracking-widest shadow-sm hover:shadow">
                 <Download size={14} strokeWidth={2.5} />
                 Export CSV
@@ -333,12 +415,20 @@ export default function SiswaClient({ initialStudents, kelasList }) {
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-[40px] overflow-hidden shadow-card p-2 flex flex-col gap-2">
+        <div className="bg-surface border border-border rounded-[20px] overflow-hidden shadow-card p-2 flex flex-col gap-2">
             <div className="overflow-x-auto rounded-[32px]">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-cream/40 px-6">
                   <tr>
-                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">No</th>
+                    <th className="px-6 py-5 w-[10px]">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                        checked={selectedSiswaIds.length === paginatedStudents.length && paginatedStudents.length > 0}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="px-5 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">No</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Identitas / NISN</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Nama Lengkap</th>
                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Lokal Kelas</th>
@@ -349,8 +439,19 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                 <tbody className="divide-y divide-border/50">
                   {paginatedStudents.length > 0 ? (
                     paginatedStudents.map((siswa, idx) => (
-                      <tr key={siswa.id} className="hover:bg-cream/20 transition-all group cursor-default">
-                        <td className="px-8 py-5 text-[13px] text-ink font-black">
+                      <tr key={siswa.id} className={cn(
+                        "hover:bg-cream/20 transition-all group cursor-default",
+                        selectedSiswaIds.includes(siswa.id) ? "bg-indigo-50/30" : ""
+                      )}>
+                        <td className="px-6 py-5">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                            checked={selectedSiswaIds.includes(siswa.id)}
+                            onChange={() => toggleSelectSiswa(siswa.id)}
+                          />
+                        </td>
+                        <td className="px-5 py-5 text-[13px] text-ink font-black">
                           {String((currentPage - 1) * itemsPerPage + idx + 1).padStart(2, '0')}
                         </td>
                         <td className="px-8 py-5">
@@ -403,7 +504,7 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                  <p className="text-[10px] font-black text-ink-3 uppercase tracking-widest leading-none">Tampil</p>
                  <span className="text-[13px] font-black text-ink leading-none">{paginatedStudents.length}</span>
                  <p className="text-[10px] font-black text-ink-3 uppercase tracking-widest leading-none">/</p>
-                 <span className="text-[10px] font-bold text-ink-3">{filteredStudents.length} Database</span>
+                 <span className="text-[10px] font-bold text-ink-3">{filteredStudents.length} Siswa</span>
               </div>
               
               {totalPages > 1 && (
@@ -420,6 +521,35 @@ export default function SiswaClient({ initialStudents, kelasList }) {
             </div>
         </div>
       </div>
+
+      {/* FLOATING ACTION BAR FOR BULK DELETE */}
+      {selectedSiswaIds.length > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-101 animate-slideUp">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+               <div className="flex flex-col">
+                  <span className="text-[13px] font-black tracking-tight">{selectedSiswaIds.length} Siswa Terpilih</span>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
+               </div>
+               <div className="w-px h-8 bg-white/10" />
+               <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedSiswaIds([])}
+                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                  >
+                    {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
+                    Hapus Permanen
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
 
       {/* VIEW MODAL (PREMIUM) */}
       {viewingSiswa && (
@@ -698,6 +828,57 @@ export default function SiswaClient({ initialStudents, kelasList }) {
         message="Seluruh data biodata, akun login, dan nilai siswa ini akan dihapus permanen dari dataset. Tindakan ini tidak dapat dibatalkan."
         confirmText="Ya, Hapus Permanen"
       />
+
+      {/* IMPORT EXCEL MODAL */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-101 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-ink/60 backdrop-blur-md animate-fadeIn" onClick={() => setIsImportModalOpen(false)} />
+          <div className="relative bg-surface w-full max-w-md rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
+             <div className="p-8 border-b border-border bg-indigo-50/30 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 rounded-2xl bg-indigo text-white flex items-center justify-center shadow-lg shadow-indigo/20">
+                      <FileText size={20} strokeWidth={2.5} />
+                   </div>
+                   <div>
+                      <h3 className="text-lg font-black text-ink uppercase tracking-tight leading-none">Import Siswa</h3>
+                      <p className="text-[10px] font-bold text-ink-3 uppercase tracking-widest mt-2">Format: .xlsx / .xls</p>
+                   </div>
+                </div>
+                <button type="button" onClick={() => setIsImportModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-border rounded-full text-ink-3 hover:text-ink transition-all hover:rotate-90"><X size={16} /></button>
+             </div>
+
+             <form onSubmit={handleImportExcel} className="p-10 flex flex-col gap-8">
+                <div className="p-8 border-2 border-dashed border-indigo/20 rounded-[32px] bg-indigo-50/5 flex flex-col items-center justify-center text-center gap-4 border-spacing-4 group hover:border-indigo/40 transition-all relative overflow-hidden">
+                   <div className="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-indigo mb-2">
+                      <Download size={24} strokeWidth={2.5} className="group-hover:translate-y-1 transition-transform" />
+                   </div>
+                   <div>
+                      <p className="text-[13px] font-black text-ink uppercase tracking-tight">Pilih File Excel Anda</p>
+                      <p className="text-[10px] text-ink-3 font-medium mt-1">Gunakan header: [Nama, NISN, Gender]</p>
+                   </div>
+                   <input 
+                     type="file" 
+                     name="file" 
+                     accept=".xlsx, .xls"
+                     className="absolute inset-0 opacity-0 cursor-pointer"
+                   />
+                </div>
+
+                <div className="flex flex-col gap-3">
+                   <button 
+                     type="submit" 
+                     disabled={isImporting}
+                     className="w-full py-4.5 bg-indigo text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-indigo/20 hover:bg-indigo-hover transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                   >
+                     {isImporting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+                     {isImporting ? "SEDANG MEMPROSES..." : "GANTI DATA & IMPORT"}
+                   </button>
+                   <p className="text-[10px] text-center text-ink-3 font-bold uppercase tracking-widest opacity-40">Pastikan format kolom sudah sesuai template</p>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

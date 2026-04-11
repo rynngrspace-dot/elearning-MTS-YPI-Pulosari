@@ -98,9 +98,18 @@ export default function SiswaPage() {
             </span>
             <p className="text-[10px] font-black uppercase tracking-widest text-white/90">Siswa Aktif</p>
           </div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight leading-none mt-2">
-            Halo, {user?.name?.split(' ')[0] || "Siswa"}! 👋
-          </h1>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight leading-none">
+              Halo, {user?.name?.split(' ')[0] || "Siswa"}! 👋
+            </h1>
+            {data.activeYear && (
+              <div className="px-3 py-1 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 ml-2">
+                <p className="text-[10px] font-black text-white/90 uppercase tracking-widest">
+                  TA {data.activeYear.tahun} - {data.activeYear.semester}
+                </p>
+              </div>
+            )}
+          </div>
           <p className="text-[13px] text-white/70 font-medium tracking-wide uppercase">
             {user?.kelas || "Kelas Anda"} · Portal Akademik
           </p>

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
-import { createPengampuAction, updatePengampuBulkAction, deletePengampuAction } from "@/lib/actions/pengampu-actions";
+import { createPengampuAction, updatePengampuBulkAction, deletePengampuAction, bulkDeletePengampuAction } from "@/lib/actions/pengampu-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -36,6 +36,51 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [formErrors, setFormErrors] = useState({});
+
+  const [selectedPengampuIds, setSelectedPengampuIds] = useState([]);
+
+  const toggleSelectPengampu = (id) => {
+    setSelectedPengampuIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPengampuIds.length === filteredData.length) {
+      setSelectedPengampuIds([]);
+    } else {
+      setSelectedPengampuIds(filteredData.map(a => a.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedPengampuIds.length === 0) return;
+    
+    if (!confirm(`Hapus ${selectedPengampuIds.length} penugasan terpilih secara permanen?`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await bulkDeletePengampuAction(selectedPengampuIds);
+      if (res.success) {
+        toast({
+          title: "Berhasil!",
+          description: `${selectedPengampuIds.length} data penugasan telah dihapus.`,
+          variant: "success",
+        });
+        setSelectedPengampuIds([]);
+      } else {
+        toast({
+          title: "Gagal Menghapus",
+          description: res.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+       toast({ title: "Kesalahan", description: "Terjadi kesalahan saat menghapus data massal.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Deletion State
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -238,77 +283,107 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
         <div className="bg-surface border border-border rounded-[40px] overflow-hidden shadow-card p-2">
           <div className="overflow-x-auto rounded-[32px]">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-separate border-spacing-0">
               <thead className="bg-cream/40">
                 <tr>
+                  <th className="px-8 py-5 w-[10px]">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                      checked={selectedPengampuIds.length === filteredData.length && filteredData.length > 0}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Guru Pengampu</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Detail Penugasan (Mapel, Kelas, Jadwal)</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Aksi</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Mata Pelajaran</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Unit Kelas</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Jadwal Harian</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Kelola</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
-                {groupedData.map((group) => (
-                  <tr key={group.teacher.id} className="hover:bg-cream/10 transition-all">
-                    <td className="px-8 py-6 align-top w-[260px] border-r border-border/50 bg-indigo-50/5">
-                      <div className="flex flex-col">
-                        <span className="text-[13px] font-black text-ink uppercase tracking-tight block leading-none">{group.teacher.user.name}</span>
-                        <span className="text-[9px] font-bold text-ink-3 uppercase tracking-widest mt-2 block opacity-50">NIP. {group.teacher.nip || "---"}</span>
-                      </div>
-                    </td>
-                    <td className="p-0">
-                      <div className="flex flex-col">
-                        {group.assignments.map((a, idx) => (
-                          <div 
-                            key={a.id} 
-                            className={cn(
-                              "flex items-center justify-between px-8 py-3.5 group/item transition-colors",
-                              idx !== group.assignments.length - 1 ? "border-b border-border/20" : ""
-                            )}
-                          >
-                            <div className="grid grid-cols-3 gap-6 flex-1 items-center">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-indigo/5 flex items-center justify-center text-indigo shrink-0">
-                                  <BookMarked size={12} />
-                                </div>
-                                <p className="text-[11px] font-black text-ink uppercase leading-none truncate">{a.mapel.nama}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-indigo/5 flex items-center justify-center text-indigo shrink-0">
-                                  <School size={12} />
-                                </div>
-                                <p className="text-[11px] font-bold text-ink uppercase leading-none truncate">{a.kelas.nama}</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-indigo/5 flex items-center justify-center text-indigo shrink-0">
-                                  <CalendarClock size={12} />
-                                </div>
-                                {a.hari ? (
-                                  <p className="text-[11px] font-bold text-ink-3 uppercase tracking-tighter leading-none">
-                                    <span className="font-black text-indigo">{a.hari}</span> {a.jamMulai}-{a.jamSelesai}
-                                  </p>
-                                ) : (
-                                  <p className="text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-30 italic">No Schedule</p>
-                                )}
-                              </div>
-                            </div>
+                {groupedData.flatMap((group) => (
+                  group.assignments.map((a, idx) => (
+                    <tr key={a.id} className={cn(
+                        "hover:bg-cream/5 transition-all group",
+                        selectedPengampuIds.includes(a.id) ? "bg-indigo-50/30" : ""
+                    )}>
+                      <td className="px-8 py-5">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                            checked={selectedPengampuIds.includes(a.id)}
+                            onChange={() => toggleSelectPengampu(a.id)}
+                          />
+                      </td>
+                      {/* Teacher Column - Only on first row with rowSpan */}
+                      {idx === 0 && (
+                        <td 
+                          rowSpan={group.assignments.length} 
+                          className="px-8 py-6 align-top w-[260px] border-r border-border/50 bg-indigo-50/[0.03]"
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-[13px] font-black text-ink uppercase tracking-tight block leading-none">{group.teacher.user.name}</span>
+                            <span className="text-[9px] font-bold text-ink-3 uppercase tracking-widest mt-2 block opacity-50">NIP. {group.teacher.nip || "---"}</span>
                           </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-8 py-6 w-[80px]">
-                      <button 
-                        onClick={() => { setEditingAssignment(group.assignments[0]); setIsModalOpen(true); }}
-                        className="w-8 h-8 flex items-center justify-center bg-indigo text-white rounded-lg shadow-lg shadow-indigo/10 hover:bg-indigo-600 transition-all hover:scale-110 active:scale-95"
-                        title="Edit Semua Jadwal Guru"
-                      >
-                        <Edit size={14} strokeWidth={3} />
-                      </button>
-                    </td>
-                  </tr>
+                        </td>
+                      )}
+
+                      {/* Mapel Column */}
+                      <td className="px-8 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-indigo/5 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo/10 transition-colors">
+                            <BookMarked size={14} />
+                          </div>
+                          <p className="text-[11px] font-black text-ink uppercase leading-none">{a.mapel.nama}</p>
+                        </div>
+                      </td>
+
+                      {/* Kelas Column */}
+                      <td className="px-8 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-8 h-8 rounded-xl bg-indigo/5 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo/10 transition-colors">
+                            <School size={14} />
+                          </div>
+                          <p className="text-[11px] font-black text-ink uppercase leading-none">{a.kelas.nama}</p>
+                        </div>
+                      </td>
+
+                      {/* Jadwal Column */}
+                      <td className="px-8 py-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-indigo/5 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo/10 transition-colors">
+                            <CalendarClock size={14} />
+                          </div>
+                          {a.hari ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-[10px] font-black text-indigo uppercase tracking-widest leading-none">{a.hari}</span>
+                              <span className="text-[10px] font-bold text-ink-3 tabular-nums">{a.jamMulai} - {a.jamSelesai}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-30 italic">No Schedule</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Action Column - Only on first row with rowSpan */}
+                      {idx === 0 && (
+                        <td rowSpan={group.assignments.length} className="px-8 py-6 w-[80px] border-l border-border/50 text-center">
+                          <button 
+                            onClick={() => { setEditingAssignment(group.assignments[0]); setIsModalOpen(true); }}
+                            className="w-10 h-10 flex items-center justify-center bg-indigo text-white rounded-2xl shadow-lg shadow-indigo/10 hover:bg-indigo-600 transition-all hover:scale-110 active:scale-95 mx-auto"
+                            title="Kelola Semua Penugasan Guru"
+                          >
+                            <Edit size={16} strokeWidth={3} />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
                 ))}
                 {groupedData.length === 0 && (
                   <tr>
-                    <td colSpan="3" className="px-8 py-20 text-center text-ink-3 font-bold uppercase tracking-[0.2em] opacity-40">
+                    <td colSpan="5" className="px-8 py-20 text-center text-ink-3 font-bold uppercase tracking-[0.2em] opacity-40 italic">
                       Data penugasan tidak ditemukan
                     </td>
                   </tr>
@@ -318,6 +393,35 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
           </div>
         </div>
       </div>
+
+      {/* FLOATING ACTION BAR FOR BULK DELETE */}
+      {selectedPengampuIds.length > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[101] animate-slideUp">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+               <div className="flex flex-col">
+                  <span className="text-[13px] font-black tracking-tight">{selectedPengampuIds.length} Penugasan Terpilih</span>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
+               </div>
+               <div className="w-px h-8 bg-white/10" />
+               <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedPengampuIds([])}
+                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                  >
+                    {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
+                    Hapus Permanen
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
 
       {/* FORM MODAL */}
       {isModalOpen && (

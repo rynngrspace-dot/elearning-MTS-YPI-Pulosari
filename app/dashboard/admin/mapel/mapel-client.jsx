@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ConfirmModal from "@/components/shared/ConfirmModal";
-import { createMapelAction, updateMapelAction, deleteMapelAction } from "@/lib/actions/mapel-actions";
+import { createMapelAction, updateMapelAction, deleteMapelAction, bulkDeleteMapelAction } from "@/lib/actions/mapel-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -52,6 +52,51 @@ export default function MapelClient({ initialData }) {
     kode: "",
     kategori: "umum"
   });
+
+  const [selectedMapelIds, setSelectedMapelIds] = useState([]);
+
+  const toggleSelectMapel = (id) => {
+    setSelectedMapelIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedMapelIds.length === paginatedData.length) {
+      setSelectedMapelIds([]);
+    } else {
+      setSelectedMapelIds(paginatedData.map(m => m.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedMapelIds.length === 0) return;
+    
+    if (!confirm(`Hapus ${selectedMapelIds.length} mata pelajaran terpilih secara permanen?`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await bulkDeleteMapelAction(selectedMapelIds);
+      if (res.success) {
+        toast({
+          title: "Berhasil!",
+          description: `${selectedMapelIds.length} data mata pelajaran telah dihapus.`,
+          variant: "success",
+        });
+        setSelectedMapelIds([]);
+      } else {
+        toast({
+          title: "Gagal Menghapus",
+          description: res.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+       toast({ title: "Kesalahan", description: "Terjadi kesalahan saat menghapus data massal.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const categories = [
     "Semua Kategori",
@@ -265,7 +310,15 @@ export default function MapelClient({ initialData }) {
           <table className="w-full text-left border-collapse">
             <thead className="bg-cream/50 border-b border-border">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3">No</th>
+                <th className="px-6 py-4 w-[10px]">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                    checked={selectedMapelIds.length === paginatedData.length && paginatedData.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+                <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3">No</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3">Mata Pelajaran</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Kategori</th>
                 <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Pengampu</th>
@@ -275,8 +328,19 @@ export default function MapelClient({ initialData }) {
             <tbody className="divide-y divide-border">
               {paginatedData.length > 0 ? (
                 paginatedData.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-cream/30 transition-colors group">
-                    <td className="px-6 py-4 text-[13px] text-ink-3 font-bold">
+                  <tr key={item.id} className={cn(
+                    "hover:bg-cream/30 transition-colors group",
+                    selectedMapelIds.includes(item.id) ? "bg-indigo-50/30" : ""
+                  )}>
+                    <td className="px-6 py-4">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                        checked={selectedMapelIds.includes(item.id)}
+                        onChange={() => toggleSelectMapel(item.id)}
+                      />
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-ink-3 font-bold">
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
                     <td className="px-6 py-4">
@@ -340,6 +404,35 @@ export default function MapelClient({ initialData }) {
           )}
         </div>
       </div>
+
+      {/* FLOATING ACTION BAR FOR BULK DELETE */}
+      {selectedMapelIds.length > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[1001] animate-slideUp">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+               <div className="flex flex-col">
+                  <span className="text-[13px] font-black tracking-tight">{selectedMapelIds.length} Mata Pelajaran Terpilih</span>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
+               </div>
+               <div className="w-px h-8 bg-white/10" />
+               <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedMapelIds([])}
+                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                  >
+                    {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
+                    Hapus Permanen
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
 
       {/* Modal - Redesigned to match 'Kelola Siswa' style */}
       {isModalOpen && (

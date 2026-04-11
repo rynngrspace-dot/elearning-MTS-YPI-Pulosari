@@ -151,6 +151,9 @@ model TahunAjaran {
   isActive  Boolean  @default(false)
   
   pengampu  Pengampu[]
+  materi    Materi[]
+  tugas     Tugas[]
+  absensi   Absensi[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -173,6 +176,9 @@ model Materi {
   kelasId      String
   kelas        Kelas    @relation(fields: [kelasId], references: [id])
   
+  tahunAjaranId String
+  tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id])
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -193,6 +199,9 @@ model Tugas {
   kelasId      String
   kelas        Kelas    @relation(fields: [kelasId], references: [id])
   
+  tahunAjaranId String
+  tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id])
+
   submissions  TugasSubmission[]
   
   createdAt    DateTime @default(now())
@@ -233,6 +242,9 @@ model Absensi {
   
   teacherId    String
   teacher      Teacher  @relation(fields: [teacherId], references: [id])
+
+  tahunAjaranId String
+  tahunAjaran   TahunAjaran @relation(fields: [tahunAjaranId], references: [id])
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

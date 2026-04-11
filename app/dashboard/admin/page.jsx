@@ -123,7 +123,9 @@ export default async function AdminPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/10">
-               <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Administrator Active</p>
+               <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
+                {activeTA ? "Administrator Active" : "System Alert"}
+               </p>
             </div>
           </div>
           <p className="font-black text-3xl text-white tracking-tight">Sistem Pusat E-Learning</p>
@@ -135,11 +137,31 @@ export default async function AdminPage() {
           <div className="flex items-center justify-end gap-2 text-white">
             <CalendarClock size={16} className="text-white/50" />
             <p className="text-[14px] font-black uppercase tracking-tighter">
-              TA {activeTA ? `${activeTA.tahun} (${activeTA.semester})` : "Belum Diatur"}
+              TA {activeTA ? `${activeTA.tahun} (${activeTA.semester})` : "BELUM AKTIF"}
             </p>
           </div>
         </div>
       </div>
+
+      {/* Critical TA Alert */}
+      {!activeTA && (
+        <div className="bg-red-500 text-white rounded-[32px] p-8 flex items-center justify-between shadow-2xl shadow-red-500/20 border-2 border-white/20 animate-pulse">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center border border-white/20 backdrop-blur-md">
+              <Activity size={28} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black uppercase tracking-tight">Tahun Ajaran Belum Aktif!</h3>
+              <p className="text-[13px] text-white/80 font-bold uppercase tracking-widest mt-1">
+                Sistem tidak dapat memproses materi, tugas, dan absensi sebelum Tahun Ajaran diaktifkan.
+              </p>
+            </div>
+          </div>
+          <Link href="/dashboard/admin/tahun-ajaran" className="px-8 py-4 bg-white text-red-600 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-neutral-100 transition shadow-lg shrink-0">
+             Aktifkan Sekarang
+          </Link>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-5">

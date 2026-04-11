@@ -38,10 +38,17 @@ export default function GuruDashboardClient({ data }) {
         <div className="absolute w-[200px] h-[200px] rounded-full bg-white/5 -left-20 -bottom-20 blur-2xl" />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2.5">
+          <div className="flex flex-wrap items-center gap-2 mb-2.5">
             <div className="px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-lg border border-white/10">
                <p className="text-[9px] font-bold text-white uppercase tracking-widest leading-none">Pendidik Aktif</p>
             </div>
+            {academic && (
+              <div className="px-2.5 py-1 bg-teal-500/20 backdrop-blur-md rounded-lg border border-teal-500/30">
+                <p className="text-[9px] font-black text-teal-200 uppercase tracking-widest leading-none">
+                   TA {academic.tahun} · {academic.semester}
+                </p>
+              </div>
+            )}
           </div>
           <p className="font-bold text-2xl text-white tracking-tight leading-none mb-1.5">Selamat Datang, {teacher.name}</p>
           <p className="text-[12px] text-white/70 font-medium uppercase tracking-widest leading-relaxed">{teacher.subject} · SMP & SMK MTS YPI Pulosari</p>
@@ -51,9 +58,7 @@ export default function GuruDashboardClient({ data }) {
           <p className="text-[11px] text-white/60 font-bold uppercase tracking-widest mb-1">{today}</p>
           <div className="flex items-center justify-end gap-2 text-white">
             <CalendarClock size={16} className="text-white/50" />
-            <p className="text-[14px] font-black uppercase tracking-tighter">
-                {academic ? `Semester ${academic.semester} · ${academic.tahun}` : "Tahun Ajaran Memuat..."}
-            </p>
+            <p className="text-[12px] font-black uppercase tracking-widest opacity-80">E-Learning Portal</p>
           </div>
         </div>
       </div>
