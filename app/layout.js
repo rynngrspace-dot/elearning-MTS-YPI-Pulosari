@@ -3,6 +3,8 @@ import { AuthProvider } from "./lib/AuthContext";
 import { getCurrentUser } from "@/lib/auth-service";
 import { Toaster } from "@/components/ui/toaster";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Elearning - MTs YPI Pulosari",
   description: "Platform eLearning MTs YPI Pulosari",
