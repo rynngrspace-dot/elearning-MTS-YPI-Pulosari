@@ -179,7 +179,7 @@ export default function SiswaPage() {
                     </div>
 
                     <div className="flex-1">
-                      <h4 className="text-[15px] font-black text-ink uppercase tracking-tight mb-1">{j.mapel.nama}</h4>
+                      <h4 className="text-[15px] font-black text-ink uppercase tracking-tight mb-1">{j.mapel?.nama || "---"}</h4>
                       <div className="flex items-center gap-3">
                         <p className="text-[11px] font-bold text-ink-3 uppercase tracking-wide truncate max-w-[150px]">
                            {j.teacher?.user?.name || "Guru"}
@@ -187,7 +187,7 @@ export default function SiswaPage() {
                         <div className="w-1 h-1 rounded-full bg-border" />
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo">
                           <MapPin size={10} />
-                          {j.kelas.nama}
+                          {j.kelas?.nama || "---"}
                         </div>
                       </div>
                     </div>
