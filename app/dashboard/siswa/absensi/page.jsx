@@ -22,7 +22,6 @@ const statusCfg = {
   "sakit": { label: "S", c: "#D97706", bg: "bg-amber-100", border: "border-amber-200" },
   "izin": { label: "I", c: "#6366F1", bg: "bg-indigo-100", border: "border-indigo-200" },
   "alpha": { label: "A", c: "#DC2626", bg: "bg-red-100", border: "border-red-200" },
-  "terlambat": { label: "T", c: "#EA580C", bg: "bg-orange-100", border: "border-orange-200" },
 };
 
 const BULAN_ID = [
@@ -100,7 +99,8 @@ export default function PresensiPage() {
     Object.values(records).forEach(subj => {
       Object.values(subj).forEach(status => {
         total++;
-        if (status === "Hadir" || status === "Terlambat") present++;
+        const sLower = status?.toLowerCase();
+        if (sLower === "hadir" || sLower === "terlambat") present++;
       });
     });
     return total > 0 ? Math.round((present / total) * 100) : 0;

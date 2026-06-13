@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 
 const statusCfg = {
   hadir:     { label: "Hadir", icon: CheckCircle2, c: "#16A34A", bg: "bg-green-50", border: "border-green-100" },
-  terlambat: { label: "Terlambat", icon: Clock, c: "#EA580C", bg: "bg-orange-50", border: "border-orange-100" },
   sakit:     { label: "Sakit", icon: AlertCircle, c: "#D97706", bg: "bg-amber-50", border: "border-amber-100" },
   izin:      { label: "Izin", icon: Clock, c: "#6366F1", bg: "bg-indigo-50", border: "border-indigo-100" },
   alpha:     { label: "Alpha", icon: XCircle, c: "#DC2626", bg: "bg-red-50", border: "border-red-100" },
