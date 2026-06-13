@@ -6,16 +6,15 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import { createPengampuAction, updatePengampuBulkAction, deletePengampuAction, bulkDeletePengampuAction } from "@/lib/actions/pengampu-actions";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Filter, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Filter,
   Briefcase,
   User,
   BookMarked,
-  School,
   CalendarClock,
   X,
   ChevronRight,
@@ -40,7 +39,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
   const [selectedPengampuIds, setSelectedPengampuIds] = useState([]);
 
   const toggleSelectPengampu = (id) => {
-    setSelectedPengampuIds(prev => 
+    setSelectedPengampuIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
@@ -55,7 +54,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
   const handleBulkDelete = async () => {
     if (selectedPengampuIds.length === 0) return;
-    
+
     if (!confirm(`Hapus ${selectedPengampuIds.length} penugasan terpilih secara permanen?`)) return;
 
     setIsDeleting(true);
@@ -76,7 +75,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
         });
       }
     } catch (error) {
-       toast({ title: "Kesalahan", description: "Terjadi kesalahan saat menghapus data massal.", variant: "destructive" });
+      toast({ title: "Kesalahan", description: "Terjadi kesalahan saat menghapus data massal.", variant: "destructive" });
     } finally {
       setIsDeleting(false);
     }
@@ -86,12 +85,12 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
   // Search/Filter logic for the table
   const filteredData = useMemo(() => {
-    return data.filter(a => 
+    return data.filter(a =>
       a.teacher.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.mapel.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.kelas.nama.toLowerCase().includes(searchTerm.toLowerCase())
@@ -112,7 +111,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
       return acc;
     }, {});
 
-    return Object.values(groups).sort((a, b) => 
+    return Object.values(groups).sort((a, b) =>
       a.teacher.user.name.localeCompare(b.teacher.user.name)
     );
   }, [filteredData]);
@@ -166,16 +165,16 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
         // Mode Tambah: Standard Single Creation
         const formData = new FormData(e.target);
         const body = Object.fromEntries(formData.entries());
-        
+
         let errors = {};
         if (!body.teacherId) errors.teacherId = "Mohon pilih guru";
         if (!body.mapelId) errors.mapelId = "Mohon pilih mata pelajaran";
         if (!body.kelasId) errors.kelasId = "Mohon pilih kelas";
 
         if (Object.keys(errors).length > 0) {
-           setFormErrors(errors);
-           setIsSaving(false);
-           return;
+          setFormErrors(errors);
+          setIsSaving(false);
+          return;
         }
 
         const payload = {
@@ -214,10 +213,10 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
           variant: "success",
         });
         setIsConfirmOpen(false);
-        
+
         // If we were in the modal, remove it from the list
         setModalAssignments(prev => prev.filter(a => a.id !== assignmentToDelete));
-        
+
         // If no more assignments for this teacher in the modal, close it
         if (editingAssignment && modalAssignments.length <= 1) {
           setIsModalOpen(false);
@@ -248,7 +247,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
         <div className="flex flex-col gap-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-6">
-              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+              <div className="w-14 h-14 rounded-2xl bg-indigo border border-indigo-border flex items-center justify-center text-white">
                 <Briefcase size={28} />
               </div>
               <div>
@@ -260,9 +259,9 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
             </div>
 
             <div className="flex items-center gap-3">
-              <button 
+              <button
                 onClick={() => { setEditingAssignment(null); setIsModalOpen(true); }}
-                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-white/10 cursor-pointer group"
               >
                 <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Penugasan
               </button>
@@ -271,12 +270,12 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
           <div className="relative group">
             <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-3 group-focus-within:text-indigo transition-colors" />
-            <input 
-              type="text" 
-              placeholder="CARI GURU, MAPEL, ATAU KELAS..." 
+            <input
+              type="text"
+              placeholder="CARI GURU, MAPEL, ATAU KELAS..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-indigo/10 transition-all"
+              className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
             />
           </div>
         </div>
@@ -287,39 +286,39 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
               <thead className="bg-cream/40">
                 <tr>
                   <th className="px-8 py-5 w-[10px]">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
                       checked={selectedPengampuIds.length === filteredData.length && filteredData.length > 0}
                       onChange={toggleSelectAll}
                     />
                   </th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Guru Pengampu</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3">Mata Pelajaran</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Unit Kelas</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Jadwal Harian</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center">Kelola</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 whitespace-nowrap">Guru Pengampu</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 whitespace-nowrap">Mata Pelajaran</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 whitespace-nowrap">Unit Kelas</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 whitespace-nowrap">Jadwal Harian</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-ink-3 text-center whitespace-nowrap">Kelola</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
                 {groupedData.flatMap((group) => (
                   group.assignments.map((a, idx) => (
                     <tr key={a.id} className={cn(
-                        "hover:bg-cream/5 transition-all group",
-                        selectedPengampuIds.includes(a.id) ? "bg-indigo-50/30" : ""
+                      "hover:bg-cream/5 transition-all group",
+                      selectedPengampuIds.includes(a.id) ? "bg-indigo-50/30" : ""
                     )}>
                       <td className="px-8 py-5">
-                          <input 
-                            type="checkbox" 
-                            className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
-                            checked={selectedPengampuIds.includes(a.id)}
-                            onChange={() => toggleSelectPengampu(a.id)}
-                          />
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-border text-indigo focus:ring-indigo transition-all cursor-pointer"
+                          checked={selectedPengampuIds.includes(a.id)}
+                          onChange={() => toggleSelectPengampu(a.id)}
+                        />
                       </td>
                       {/* Teacher Column - Only on first row with rowSpan */}
                       {idx === 0 && (
-                        <td 
-                          rowSpan={group.assignments.length} 
+                        <td
+                          rowSpan={group.assignments.length}
                           className="px-8 py-6 align-top w-[260px] border-r border-border/50 bg-indigo-50/[0.03]"
                         >
                           <div className="flex flex-col">
@@ -331,37 +330,27 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
                       {/* Mapel Column */}
                       <td className="px-8 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-indigo/5 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo/10 transition-colors">
-                            <BookMarked size={14} />
-                          </div>
-                          <p className="text-[11px] font-black text-ink uppercase leading-none">{a.mapel.nama}</p>
-                        </div>
+                        <span className="text-[13px] font-black text-ink uppercase tracking-tight">{a.mapel.nama}</span>
                       </td>
 
                       {/* Kelas Column */}
-                      <td className="px-8 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-8 h-8 rounded-xl bg-indigo/5 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo/10 transition-colors">
-                            <School size={14} />
-                          </div>
-                          <p className="text-[11px] font-black text-ink uppercase leading-none">{a.kelas.nama}</p>
-                        </div>
+                      <td className="px-8 py-4 whitespace-nowrap">
+                        <span className="inline-block whitespace-nowrap px-3 py-1 bg-indigo-50 text-indigo text-[10px] font-black rounded-lg border border-indigo-100 uppercase tracking-widest">{a.kelas.nama}</span>
                       </td>
 
                       {/* Jadwal Column */}
                       <td className="px-8 py-4">
-                        <div className="flex items-center justify-center gap-3">
+                        <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-xl bg-indigo/5 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo/10 transition-colors">
                             <CalendarClock size={14} />
                           </div>
                           {a.hari ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[10px] font-black text-indigo uppercase tracking-widest leading-none">{a.hari}</span>
-                              <span className="text-[10px] font-bold text-ink-3 tabular-nums">{a.jamMulai} - {a.jamSelesai}</span>
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-black text-indigo uppercase tracking-widest leading-none">{a.hari}</span>
+                              <span className="text-[10px] font-bold text-ink-3 tabular-nums mt-1">{a.jamMulai} - {a.jamSelesai}</span>
                             </div>
                           ) : (
-                            <span className="text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-30 italic">No Schedule</span>
+                            <span className="text-[9px] font-bold text-ink-3 uppercase tracking-widest opacity-30 italic">Belum Diatur</span>
                           )}
                         </div>
                       </td>
@@ -369,9 +358,9 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                       {/* Action Column - Only on first row with rowSpan */}
                       {idx === 0 && (
                         <td rowSpan={group.assignments.length} className="px-8 py-6 w-[80px] border-l border-border/50 text-center">
-                          <button 
+                          <button
                             onClick={() => { setEditingAssignment(group.assignments[0]); setIsModalOpen(true); }}
-                            className="w-10 h-10 flex items-center justify-center bg-indigo text-white rounded-2xl shadow-lg shadow-indigo/10 hover:bg-indigo-600 transition-all hover:scale-110 active:scale-95 mx-auto"
+                            className="w-10 h-10 flex items-center justify-center bg-indigo text-white rounded-2xl hover:bg-indigo-hover transition-all mx-auto"
                             title="Kelola Semua Penugasan Guru"
                           >
                             <Edit size={16} strokeWidth={3} />
@@ -396,31 +385,31 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
       {/* FLOATING ACTION BAR FOR BULK DELETE */}
       {selectedPengampuIds.length > 0 && (
-         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[101] animate-slideUp">
-            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
-               <div className="flex flex-col">
-                  <span className="text-[13px] font-black tracking-tight">{selectedPengampuIds.length} Penugasan Terpilih</span>
-                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
-               </div>
-               <div className="w-px h-8 bg-white/10" />
-               <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setSelectedPengampuIds([])}
-                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
-                  >
-                    Batal
-                  </button>
-                  <button 
-                    onClick={handleBulkDelete}
-                    disabled={isDeleting}
-                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
-                  >
-                    {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
-                    Hapus Permanen
-                  </button>
-               </div>
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[101] animate-slideUp">
+          <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] border border-white/10 backdrop-blur-xl">
+            <div className="flex flex-col">
+              <span className="text-[13px] font-black tracking-tight">{selectedPengampuIds.length} Penugasan Terpilih</span>
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
             </div>
-         </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSelectedPengampuIds([])}
+                className="px-6 py-2.5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="px-8 py-2.5 bg-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
+                Hapus Permanen
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* FORM MODAL */}
@@ -430,7 +419,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
           <div className="relative bg-surface w-full max-w-2xl rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp max-h-[90vh]">
             <div className="p-8 border-b border-border bg-indigo-50/30 flex items-center justify-between">
               <div className="flex items-center gap-5">
-                <div className="w-12 h-12 rounded-[20px] bg-indigo/10 flex items-center justify-center text-indigo-600 border border-indigo/5 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-indigo/10 flex items-center justify-center text-indigo border border-indigo/5">
                   <CalendarClock size={22} strokeWidth={3} />
                 </div>
                 <div>
@@ -453,53 +442,53 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                     {modalAssignments.map((a) => (
                       <div key={a.id} className="p-6 bg-cream/10 border border-border/60 rounded-[32px] relative group/item shadow-sm hover:border-indigo/30 transition-all">
                         <div className="flex items-center justify-between mb-6">
-                           <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-indigo text-white flex items-center justify-center">
-                                 <BookMarked size={14} />
-                              </div>
-                              <h4 className="text-[12px] font-black text-ink uppercase tracking-tight">Edit Penugasan</h4>
-                           </div>
-                           <button 
-                             type="button" 
-                             onClick={() => openDeleteConfirm(a.id)}
-                             className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-60 hover:opacity-100"
-                             title="Hapus Penugasan Ini"
-                           >
-                             <Trash2 size={16} />
-                           </button>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo text-white flex items-center justify-center">
+                              <BookMarked size={14} />
+                            </div>
+                            <h4 className="text-[12px] font-black text-ink uppercase tracking-tight">Edit Penugasan</h4>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => openDeleteConfirm(a.id)}
+                            className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-60 hover:opacity-100"
+                            title="Hapus Penugasan Ini"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 mb-5">
-                           <div className="flex flex-col gap-2">
-                              <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Mata Pelajaran</label>
-                              <select 
-                                value={a.mapelId} 
-                                onChange={(e) => updateModalRow(a.id, "mapelId", e.target.value)}
-                                className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all"
-                              >
-                                 <option value="">PILIH MAPEL</option>
-                                 {mapels.map(m => <option key={m.id} value={m.id}>{m.nama}</option>)}
-                              </select>
-                           </div>
-                           <div className="flex flex-col gap-2">
-                              <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Unit Kelas</label>
-                              <select 
-                                value={a.kelasId} 
-                                onChange={(e) => updateModalRow(a.id, "kelasId", e.target.value)}
-                                className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all"
-                              >
-                                 {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
-                              </select>
-                           </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Mata Pelajaran</label>
+                            <select
+                              value={a.mapelId}
+                              onChange={(e) => updateModalRow(a.id, "mapelId", e.target.value)}
+                              className="px-4 py-3 bg-white border border-border rounded-2xl text-[10px] font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                            >
+                              <option value="">PILIH MAPEL</option>
+                              {mapels.map(m => <option key={m.id} value={m.id}>{m.nama}</option>)}
+                            </select>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Unit Kelas</label>
+                            <select
+                              value={a.kelasId}
+                              onChange={(e) => updateModalRow(a.id, "kelasId", e.target.value)}
+                              className="px-4 py-3 bg-white border border-border rounded-2xl text-[10px] font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                            >
+                              {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
+                            </select>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">
                           <div className="flex flex-col gap-2">
                             <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Hari</label>
-                            <select 
-                              value={a.hari} 
+                            <select
+                              value={a.hari}
                               onChange={(e) => updateModalRow(a.id, "hari", e.target.value)}
-                              className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all"
+                              className="px-4 py-3 bg-white border border-border rounded-2xl text-[10px] font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                             >
                               <option value="">PILIH HARI</option>
                               {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -507,20 +496,20 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                           </div>
                           <div className="flex flex-col gap-2">
                             <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Mulai</label>
-                            <input 
-                              type="time" 
-                              value={a.jamMulai} 
+                            <input
+                              type="time"
+                              value={a.jamMulai}
                               onChange={(e) => updateModalRow(a.id, "jamMulai", e.target.value)}
-                              className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all" 
+                              className="px-4 py-3 bg-white border border-border rounded-2xl text-[10px] font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                             />
                           </div>
                           <div className="flex flex-col gap-2">
                             <label className="text-[9px] font-black text-ink-3 uppercase ml-1 tracking-widest">Selesai</label>
-                            <input 
-                              type="time" 
-                              value={a.jamSelesai} 
+                            <input
+                              type="time"
+                              value={a.jamSelesai}
                               onChange={(e) => updateModalRow(a.id, "jamSelesai", e.target.value)}
-                              className="px-4 py-3 bg-white border border-border rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-indigo transition-all" 
+                              className="px-4 py-3 bg-white border border-border rounded-2xl text-[10px] font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
                             />
                           </div>
                         </div>
@@ -532,14 +521,14 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                   <div className="flex flex-col gap-6">
                     <div className="flex flex-col gap-2.5">
                       <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Pilih Guru</label>
-                      <select 
-                        value={selectedTeacherId} 
-                        name="teacherId" 
+                      <select
+                        value={selectedTeacherId}
+                        name="teacherId"
                         onChange={(e) => {
                           const tId = e.target.value;
                           setSelectedTeacherId(tId);
                         }}
-                        className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.teacherId ? "border-red-500 bg-red-50/10" : "border-border")}
+                        className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all", formErrors.teacherId ? "border-red-500 bg-red-50/10" : "border-border")}
                       >
                         <option value="">CARI NAMA GURU</option>
                         {teachers.map(t => <option key={t.id} value={t.id}>{t.user.name}</option>)}
@@ -550,9 +539,9 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                     <div className="grid grid-cols-2 gap-5">
                       <div className="flex flex-col gap-2.5">
                         <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Mata Pelajaran</label>
-                        <select 
-                          name="mapelId" 
-                          className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.mapelId ? "border-red-500 bg-red-50/10" : "border-border")}
+                        <select
+                          name="mapelId"
+                          className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all", formErrors.mapelId ? "border-red-500 bg-red-50/10" : "border-border")}
                         >
                           <option value="">PILIH MAPEL</option>
                           {mapels.map(m => <option key={m.id} value={m.id}>{m.nama}</option>)}
@@ -561,7 +550,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                       </div>
                       <div className="flex flex-col gap-2.5">
                         <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Unit Kelas</label>
-                        <select name="kelasId" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all", formErrors.kelasId ? "border-red-500 bg-red-50/10" : "border-border")}>
+                        <select name="kelasId" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all", formErrors.kelasId ? "border-red-500 bg-red-50/10" : "border-border")}>
                           <option value="">PILIH KELAS</option>
                           {kelas.map(k => <option key={k.id} value={k.id}>{k.nama}</option>)}
                         </select>
@@ -571,7 +560,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
 
                     <div className="flex flex-col gap-2.5">
                       <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Tahun Ajaran Aktif</label>
-                      <select name="tahunAjaranId" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all">
+                      <select name="tahunAjaranId" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all">
                         {academics.map(a => <option key={a.id} value={a.id}>{a.tahun} ({a.semester}) {a.isActive ? '- AKTIF' : ''}</option>)}
                       </select>
                     </div>
@@ -579,18 +568,18 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
                     <div className="grid grid-cols-3 gap-5">
                       <div className="flex flex-col gap-2.5">
                         <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Hari</label>
-                        <select name="hari" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all">
+                        <select name="hari" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all">
                           <option value="">PILIH HARI</option>
                           {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                       </div>
                       <div className="flex flex-col gap-2.5">
                         <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Mulai</label>
-                        <input name="jamMulai" type="time" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all" />
+                        <input name="jamMulai" type="time" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" />
                       </div>
                       <div className="flex flex-col gap-2.5">
                         <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Selesai</label>
-                        <input name="jamSelesai" type="time" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none transition-all" />
+                        <input name="jamSelesai" type="time" className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" />
                       </div>
                     </div>
                   </div>
@@ -598,10 +587,10 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
               </div>
 
               <div className="p-8 border-t border-border bg-cream/5">
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isSaving}
-                  className="w-full py-5 bg-indigo text-white rounded-[24px] text-[12px] font-black uppercase tracking-widest shadow-xl shadow-indigo/20 hover:bg-indigo-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                  className="w-full py-5 bg-indigo text-white rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-indigo-hover transition-all disabled:opacity-50 flex items-center justify-center gap-3"
                 >
                   {isSaving ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -624,7 +613,7 @@ export default function PengampuClient({ initialData, teachers, mapels, kelas, a
       `}</style>
 
       {/* CONFIRMATION MODAL */}
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={isConfirmOpen}
         isLoading={isDeleting}
         onClose={() => setIsConfirmOpen(false)}

@@ -239,7 +239,7 @@ export default function MapelClient({ initialData }) {
       {/* Header Section (Following 'Kelola Siswa' pattern) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
            <div className="flex items-center gap-6">
-              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+              <div className="w-14 h-14 rounded-2xl bg-indigo border border-indigo-border flex items-center justify-center text-white">
                  <BookMarked size={28} />
               </div>
               <div>
@@ -253,7 +253,7 @@ export default function MapelClient({ initialData }) {
            <div className="flex items-center gap-3">
               <button 
                 onClick={() => { resetForm(); setIsModalOpen(true); }}
-                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-white/10 cursor-pointer group"
               >
                 <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Mata Pelajaran
               </button>
@@ -270,7 +270,7 @@ export default function MapelClient({ initialData }) {
               placeholder="Cari Nama Mapel atau Kode..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-6 py-3 bg-surface border border-border rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo/10 focus:border-indigo transition-all font-medium"
+              className="w-full pl-12 pr-6 py-3 bg-surface border border-border rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-black/10 focus:border-black transition-all font-medium"
             />
           </div>
           
@@ -292,9 +292,9 @@ export default function MapelClient({ initialData }) {
             <button
               key={cat}
               onClick={() => setSelectedCategory(selectedCategory === cat ? "Semua Kategori" : cat)}
-              className={`px-5 py-2 rounded-xl text-[10px] uppercase font-black tracking-widest whitespace-nowrap transition-all border ${
+              className={`px-5 py-2 rounded-2xl text-[10px] uppercase font-black tracking-widest whitespace-nowrap transition-all border ${
                 selectedCategory === cat 
-                ? "bg-indigo text-white border-indigo shadow-md shadow-indigo/20 scale-105" 
+                ? "bg-indigo text-white border-indigo scale-105" 
                 : "bg-surface border-border text-ink-3 hover:border-indigo/50"
               }`}
             >
@@ -344,14 +344,9 @@ export default function MapelClient({ initialData }) {
                       {(currentPage - 1) * itemsPerPage + idx + 1}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo/10 flex items-center justify-center text-indigo shrink-0 group-hover:bg-indigo group-hover:text-white transition-all">
-                          <BookMarked size={18} strokeWidth={2.5} />
-                        </div>
-                        <div>
-                           <p className="text-[14px] font-bold text-ink group-hover:text-indigo transition-colors leading-tight">{item.nama}</p>
-                           <p className="text-[10px] font-mono text-ink-3 mt-0.5 tracking-widest uppercase">{item.kode || "No Code"}</p>
-                        </div>
+                      <div>
+                         <p className="text-[14px] font-bold text-ink group-hover:text-indigo transition-colors leading-tight">{item.nama}</p>
+                         <p className="text-[10px] font-mono text-ink-3 mt-0.5 tracking-widest uppercase">{item.kode || "No Code"}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -367,8 +362,8 @@ export default function MapelClient({ initialData }) {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleEdit(item)} className="p-2 text-ink-3 hover:text-indigo hover:bg-indigo-light rounded-lg transition-all"><Edit size={16} /></button>
-                        <button onClick={() => openDeleteConfirm(item.id, item._count.pengampu)} className="p-2 text-ink-3 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                        <button onClick={() => handleEdit(item)} className="p-2 text-ink-3 hover:text-indigo hover:bg-indigo-light rounded-2xl transition-all"><Edit size={16} /></button>
+                        <button onClick={() => openDeleteConfirm(item.id, item._count.pengampu)} className="p-2 text-ink-3 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
@@ -392,14 +387,14 @@ export default function MapelClient({ initialData }) {
           </p>
           
           {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="p-1 px-2 border border-border rounded-lg bg-surface text-ink-3 hover:bg-cream disabled:opacity-30"><ChevronLeft size={16} /></button>
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="w-9 h-9 flex items-center justify-center border border-border rounded-2xl bg-surface text-ink-3 hover:bg-cream disabled:opacity-30 transition-all"><ChevronLeft size={16} /></button>
+              <div className="flex items-center gap-1.5">
                 {[...Array(totalPages)].map((_, i) => (
-                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`min-w-[32px] h-8 text-[11px] font-black rounded-lg transition-all ${currentPage === i + 1 ? "bg-indigo text-white shadow-md shadow-indigo/20 scale-105" : "bg-surface border border-border text-ink-3"}`}>{i + 1}</button>
+                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`min-w-[36px] h-9 text-[11px] font-black rounded-2xl transition-all ${currentPage === i + 1 ? "bg-indigo text-white scale-105 border border-white/10" : "bg-surface border border-border text-ink-3 hover:border-indigo/30"}`}>{i + 1}</button>
                 ))}
               </div>
-              <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="p-1 px-2 border border-border rounded-lg bg-surface text-ink-3 hover:bg-cream disabled:opacity-30"><ChevronRight size={16} /></button>
+              <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="w-9 h-9 flex items-center justify-center border border-border rounded-2xl bg-surface text-ink-3 hover:bg-cream disabled:opacity-30 transition-all"><ChevronRight size={16} /></button>
             </div>
           )}
         </div>
@@ -408,7 +403,7 @@ export default function MapelClient({ initialData }) {
       {/* FLOATING ACTION BAR FOR BULK DELETE */}
       {selectedMapelIds.length > 0 && (
          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[1001] animate-slideUp">
-            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] border border-white/10 backdrop-blur-xl">
                <div className="flex flex-col">
                   <span className="text-[13px] font-black tracking-tight">{selectedMapelIds.length} Mata Pelajaran Terpilih</span>
                   <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
@@ -417,14 +412,14 @@ export default function MapelClient({ initialData }) {
                <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setSelectedMapelIds([])}
-                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                    className="px-6 py-2.5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
                   >
                     Batal
                   </button>
                   <button 
                     onClick={handleBulkDelete}
                     disabled={isDeleting}
-                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                    className="px-8 py-2.5 bg-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all flex items-center gap-2"
                   >
                     {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
                     Hapus Permanen
@@ -473,7 +468,7 @@ export default function MapelClient({ initialData }) {
                 <input 
                   type="text" 
                   placeholder="Contoh: Matematika" 
-                  className={cn("px-5 py-3.5 bg-cream/50 border rounded-xl text-[13px] font-bold focus:ring-4 focus:ring-indigo/10 outline-none transition-all", formErrors.nama ? "border-red-500 bg-red-50/10" : "border-border")}
+                  className={cn("px-5 py-3.5 bg-cream/50 border rounded-xl text-[13px] font-bold focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all", formErrors.nama ? "border-red-500 bg-red-50/10" : "border-border")}
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                 />
@@ -491,7 +486,7 @@ export default function MapelClient({ initialData }) {
                       "px-5 py-3.5 border rounded-xl text-[13px] font-mono font-bold transition-all",
                       editingId 
                         ? "bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed" 
-                        : "bg-cream/50 border-border focus:ring-4 focus:ring-indigo/10"
+                        : "bg-cream/50 border-border focus:ring-2 focus:ring-black focus:border-transparent"
                     )}
                     value={formData.kode}
                     onChange={(e) => setFormData({ ...formData, kode: e.target.value })}
@@ -524,10 +519,10 @@ export default function MapelClient({ initialData }) {
                   type="submit" 
                   disabled={isLoading}
                   className={cn(
-                    "flex-1 py-3.5 text-white rounded-2xl text-[10px] font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest",
+                    "flex-1 py-3.5 text-white rounded-2xl text-[10px] font-extrabold transition-all flex items-center justify-center gap-2 uppercase tracking-widest",
                     editingId 
-                      ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20" 
-                      : "bg-indigo hover:bg-indigo-hover shadow-indigo/20"
+                      ? "bg-amber-600 hover:bg-amber-700" 
+                      : "bg-indigo hover:bg-indigo-hover"
                   )}
                 >
                   {isLoading && <Loader2 size={14} className="animate-spin" />}

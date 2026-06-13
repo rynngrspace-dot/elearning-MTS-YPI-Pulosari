@@ -6,8 +6,12 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { LogOut, GraduationCap, X, ChevronDown, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/lib/AuthContext";
 import { navConfig } from "@/app/lib/navConfig";
-import { getStudentMapelsAction, getTeacherMapelsAction } from "@/lib/actions/pengampu-actions";
+import {
+  getStudentMapelsAction,
+  getTeacherMapelsAction,
+} from "@/lib/actions/pengampu-actions";
 import { useEffect } from "react";
+import Image from "next/image";
 
 const roleMeta = {
   siswa: {
@@ -50,41 +54,48 @@ export default function Sidebar({ open, close }) {
         const fetchMapels = async () => {
           const res = await getStudentMapelsAction(user.kelasId);
           if (res.success && res.data.length > 0) {
-            setDynamicMapels(res.data.map(item => ({
-              label: item.mapel.nama,
-              href: `/dashboard/siswa/mapel/${item.mapelId}`,
-              id: item.mapelId
-            })));
+            setDynamicMapels(
+              res.data.map((item) => ({
+                label: item.mapel.nama,
+                href: `/dashboard/siswa/mapel/${item.mapelId}`,
+                id: item.mapelId,
+              })),
+            );
           }
         };
         fetchMapels();
       }
     }
   }, [user]);
-  
+
   // Fetch subjects for teachers
   useEffect(() => {
     if (user?.role === "TEACHER" && user?.teacherId) {
-        const fetchMapels = async () => {
-          const res = await getTeacherMapelsAction(user.teacherId);
-          if (res.success && res.data.length > 0) {
-            setDynamicMapels(res.data.map(item => ({
+      const fetchMapels = async () => {
+        const res = await getTeacherMapelsAction(user.teacherId);
+        if (res.success && res.data.length > 0) {
+          setDynamicMapels(
+            res.data.map((item) => ({
               label: `${item.mapel.nama} - ${item.kelas.nama}`,
               href: `/dashboard/guru/mapel/${item.id}`,
-              id: item.id
-            })));
-          }
-        };
-        fetchMapels();
+              id: item.id,
+            })),
+          );
+        }
+      };
+      fetchMapels();
     }
   }, [user]);
 
   // Handle Auto-Expand Persistence
   useEffect(() => {
-     const isSubjectRoute = pathname.includes('/mapel/') || (queryId && (pathname.includes('/tugas') || pathname.includes('/materi')));
-     if (isSubjectRoute) {
-        setOpenMenus(prev => ({ ...prev, "Mata Pelajaran": true }));
-     }
+    const isSubjectRoute =
+      pathname.includes("/mapel/") ||
+      (queryId &&
+        (pathname.includes("/tugas") || pathname.includes("/materi")));
+    if (isSubjectRoute) {
+      setOpenMenus((prev) => ({ ...prev, "Mata Pelajaran": true }));
+    }
   }, [pathname, queryId]);
 
   const handleLogout = async () => {
@@ -98,13 +109,18 @@ export default function Sidebar({ open, close }) {
     }
   };
 
-  const roleKey = user?.role === "TEACHER" ? "guru" : user?.role === "STUDENT" ? "siswa" : "admin";
+  const roleKey =
+    user?.role === "TEACHER"
+      ? "guru"
+      : user?.role === "STUDENT"
+        ? "siswa"
+        : "admin";
   let items = navConfig[roleKey] ?? [];
   const meta = roleMeta[roleKey] || roleMeta.siswa;
 
   // Inject dynamic mapels if student or teacher
   if (roleKey === "siswa" || roleKey === "guru") {
-    items = items.map(item => {
+    items = items.map((item) => {
       if (item.label === "Mata Pelajaran") {
         return { ...item, children: dynamicMapels };
       }
@@ -114,11 +130,15 @@ export default function Sidebar({ open, close }) {
 
   const isActive = (href, childId) => {
     // Exact match for main dashboard to avoid highlighting it when on sub-pages
-    if (href === "/dashboard/admin" || href === "/dashboard/guru" || href === "/dashboard/siswa") {
+    if (
+      href === "/dashboard/admin" ||
+      href === "/dashboard/guru" ||
+      href === "/dashboard/siswa"
+    ) {
       return pathname === href;
     }
 
-    // Context-aware check for students: 
+    // Context-aware check for students:
     // If we have an 'id' in the URL (from Materi/Tugas filter), highlight the matching subject
     if (user?.role === "STUDENT" && queryId && childId === queryId) {
       return true;
@@ -174,12 +194,19 @@ export default function Sidebar({ open, close }) {
             <div
               className={`w-9 h-9 rounded-[10px] ${meta.accent} flex items-center justify-center`}
             >
-              <GraduationCap size={18} className="text-white" />
+              {/* <GraduationCap size={18} className="text-white" /> */}
+              <Image
+                src="/assets/images/logo-mts.png"
+                alt="Logo"
+                width={100}
+                height={100}
+                className="object-cover"
+              />
             </div>
 
             <div>
               <p className="font-jakarta font-extrabold text-[15px] text-ink">
-                ElearningJamil
+                MTS YPI Pulosari
               </p>
               <p className="text-[11px] text-ink-3 mt-0.5">{meta.label}</p>
             </div>
@@ -196,8 +223,12 @@ export default function Sidebar({ open, close }) {
             {items.map((item) => {
               const { icon: Icon, label, href, children } = item;
               // A menu is a parent if it has children OR if it's explicitly designed to be a dropdown (like Mata Pelajaran)
-              const hasChildren = (children && children.length > 0) || label === "Mata Pelajaran";
-              const active = href ? isActive(href) : (children && children.some(child => isActive(child.href, child.id)));
+              const hasChildren =
+                (children && children.length > 0) || label === "Mata Pelajaran";
+              const active = href
+                ? isActive(href)
+                : children &&
+                  children.some((child) => isActive(child.href, child.id));
               const isOpen = openMenus[label];
 
               if (hasChildren) {
@@ -223,27 +254,28 @@ export default function Sidebar({ open, close }) {
                         }`}
                       />
                     </button>
-                    
+
                     {isOpen && (
                       <div className="flex flex-col mt-0.5 ml-4 pl-4 border-l border-border gap-0.5">
-                        {children && children.map((child) => {
-                          const childActive = isActive(child.href, child.id);
-                          return (
-                            <Link
-                              key={child.label}
-                              href={child.href}
-                              onClick={close}
-                              className={`px-2.5 py-[7px] rounded-[8px] text-[13px] transition-colors
+                        {children &&
+                          children.map((child) => {
+                            const childActive = isActive(child.href, child.id);
+                            return (
+                              <Link
+                                key={child.label}
+                                href={child.href}
+                                onClick={close}
+                                className={`px-2.5 py-[7px] rounded-[8px] text-[13px] transition-colors
                               ${
                                 childActive
                                   ? `${meta.text} font-medium bg-cream`
                                   : "text-ink-3 hover:text-ink-2 hover:bg-cream/50"
                               }`}
-                            >
-                              {child.label}
-                            </Link>
-                          );
-                        })}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
                       </div>
                     )}
                   </div>
@@ -274,9 +306,15 @@ export default function Sidebar({ open, close }) {
         {user && (
           <div className="px-3 pt-3 pb-2 border-t border-border">
             <div className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[10px] bg-cream">
-              <div className={`w-8 h-8 rounded-full border-2 ${meta.border} bg-white flex items-center justify-center overflow-hidden shrink-0`}>
+              <div
+                className={`w-8 h-8 rounded-full border-2 ${meta.border} bg-white flex items-center justify-center overflow-hidden shrink-0`}
+              >
                 {user?.avatar ? (
-                  <img src={user.avatar} alt="foto" className="w-full h-full object-cover" />
+                  <img
+                    src={user.avatar}
+                    alt="foto"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span className="text-[10px] font-bold text-ink-3">
                     {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
@@ -289,7 +327,11 @@ export default function Sidebar({ open, close }) {
                   {user?.name || user?.email}
                 </p>
                 <p className="text-[11px] text-ink-3 truncate">
-                  {user?.role === "STUDENT" ? user?.kelas || "Siswa" : user?.role === "TEACHER" ? user?.mapel || "Guru" : "Administrator"}
+                  {user?.role === "STUDENT"
+                    ? user?.kelas || "Siswa"
+                    : user?.role === "TEACHER"
+                      ? user?.mapel || "Guru"
+                      : "Administrator"}
                 </p>
               </div>
             </div>
@@ -298,7 +340,7 @@ export default function Sidebar({ open, close }) {
 
         {/* Global Logout/Back to Login Button */}
         <div className="px-3 pb-[18px] mt-auto">
-          <button 
+          <button
             onClick={handleLogout}
             disabled={isLoggingOut}
             className="w-full flex items-center gap-2.5 p-2.5 px-3 hover:bg-red-50 rounded-lg transition-all text-ink-2 hover:text-red-600 group/logout disabled:opacity-50"
@@ -307,9 +349,14 @@ export default function Sidebar({ open, close }) {
             {isLoggingOut ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              <LogOut size={16} className="group-hover/logout:scale-110 transition-transform" />
+              <LogOut
+                size={16}
+                className="group-hover/logout:scale-110 transition-transform"
+              />
             )}
-            <span className="text-[13.5px] font-medium">{user ? "Keluar Sistem" : "Reset Sesi / Login"}</span>
+            <span className="text-[13.5px] font-medium">
+              {user ? "Keluar Sistem" : "Reset Sesi / Login"}
+            </span>
           </button>
         </div>
       </aside>

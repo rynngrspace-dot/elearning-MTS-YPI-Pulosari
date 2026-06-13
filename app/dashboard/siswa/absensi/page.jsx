@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+  Clock,
   AlertCircle,
   FileText,
   CalendarDays,
@@ -26,7 +26,7 @@ const statusCfg = {
 };
 
 const BULAN_ID = [
-  "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
 ];
 
@@ -36,7 +36,7 @@ export default function PresensiPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [records, setRecords] = useState({});
   const [loading, setLoading] = useState(true);
-  
+
   const daysInMonth = useMemo(() => {
     return new Date(currentYear, currentMonth + 1, 0).getDate();
   }, [currentYear, currentMonth]);
@@ -55,12 +55,12 @@ export default function PresensiPage() {
           const grouped = {};
           res.data.forEach(item => {
             const subject = item.mapel.nama;
-            
+
             // AMBIL ANGKA TANGGAL LANGSUNG DARI UTC
             // Karena kita simpan di jam 12:00 UTC (UTC Noon), 
             // getUTCDate() pasti mengembalikan angka tanggal yang benar tanpa shift.
             const day = new Date(item.tanggal).getUTCDate();
-            
+
             if (!grouped[subject]) grouped[subject] = {};
             grouped[subject][day] = item.status;
           });
@@ -108,41 +108,41 @@ export default function PresensiPage() {
 
   return (
     <div className="p-6 md:p-10 flex flex-col gap-8 animate-[slideUp_0.4s_ease_both]">
-      
+
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
-           <div className="w-12 h-12 rounded-2xl bg-indigo flex items-center justify-center text-white shadow-lg shadow-indigo/20">
-              <CalendarDays size={24} />
-           </div>
-           <div>
-              <h1 className="text-2xl font-black text-ink uppercase tracking-tight leading-none">Rekap Presensi Bulanan</h1>
-              <p className="text-[11px] font-bold text-ink-3 uppercase tracking-widest mt-2 opacity-60">Pantau kehadiran Anda berdasarkan rekaman Guru</p>
-           </div>
+          <div className="w-12 h-12 rounded-2xl bg-indigo flex items-center justify-center text-white shadow-lg shadow-indigo/20">
+            <CalendarDays size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-ink uppercase tracking-tight leading-none">Rekap Presensi Bulanan</h1>
+            <p className="text-[11px] font-bold text-ink-3 uppercase tracking-widest mt-2 opacity-60">Pantau kehadiran Anda berdasarkan rekaman Guru</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 bg-white border border-border px-5 py-3 rounded-2xl shadow-sm">
-           <button onClick={prevMonth} className="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center text-ink-3 transition-colors">
-              <ChevronLeft size={18} />
-           </button>
-           <div className="min-w-[140px] text-center">
-              <p className="text-[13px] font-black text-ink uppercase tracking-wider">{BULAN_ID[currentMonth]}</p>
-              <p className="text-[10px] font-black text-ink-3 uppercase tracking-[0.2em]">{currentYear}</p>
-           </div>
-           <button onClick={nextMonth} className="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center text-ink-3 transition-colors">
-              <ChevronRight size={18} />
-           </button>
+          <button onClick={prevMonth} className="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center text-ink-3 transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <div className="min-w-[140px] text-center">
+            <p className="text-[13px] font-black text-ink uppercase tracking-wider">{BULAN_ID[currentMonth]}</p>
+            <p className="text-[10px] font-black text-ink-3 uppercase tracking-[0.2em]">{currentYear}</p>
+          </div>
+          <button onClick={nextMonth} className="w-8 h-8 rounded-full hover:bg-cream flex items-center justify-center text-ink-3 transition-colors">
+            <ChevronRight size={18} />
+          </button>
         </div>
       </div>
 
       {/* Grid Container */}
-      <div className="bg-surface border border-border rounded-[32px] shadow-card overflow-hidden">
+      <div className="bg-surface border border-border rounded-2xl shadow-card overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           {loading ? (
-             <div className="w-full h-80 flex flex-col items-center justify-center gap-4">
-                <Loader2 size={32} className="animate-spin text-indigo" />
-                <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Mengambil histori...</p>
-             </div>
+            <div className="w-full h-80 flex flex-col items-center justify-center gap-4">
+              <Loader2 size={32} className="animate-spin text-indigo" />
+              <p className="text-[11px] font-black uppercase tracking-widest text-ink-3">Mengambil histori...</p>
+            </div>
           ) : (
             <table className="w-full border-collapse">
               <thead>
@@ -163,8 +163,8 @@ export default function PresensiPage() {
                     <tr key={subject} className="hover:bg-cream/10 transition-colors group">
                       <td className="sticky left-0 z-10 bg-white/95 backdrop-blur-md px-6 py-4 border-r border-border shadow-[4px_0_10px_-2px_rgba(0,0,0,0.02)]">
                         <div className="flex items-center gap-3">
-                           <div className="w-2 h-2 rounded-full bg-indigo/30" />
-                           <span className="text-[12px] font-black text-ink uppercase tracking-tight">{subject}</span>
+                          <div className="w-2 h-2 rounded-full bg-indigo/30" />
+                          <span className="text-[12px] font-black text-ink uppercase tracking-tight">{subject}</span>
                         </div>
                       </td>
                       {daysArray.map(day => {
@@ -174,7 +174,7 @@ export default function PresensiPage() {
                         return (
                           <td key={day} className="p-1.5 border-r border-border/30 text-center">
                             {cfg ? (
-                              <div 
+                              <div
                                 title={`${subject} - Tgl ${day}: ${status}`}
                                 className={cn(
                                   "w-8 h-8 mx-auto rounded-lg flex items-center justify-center text-[11px] font-black transition-transform hover:scale-110",
@@ -197,9 +197,9 @@ export default function PresensiPage() {
                 ) : (
                   <tr>
                     <td colSpan={daysInMonth + 1} className="py-20 text-center">
-                       <p className="text-[13px] font-medium text-ink-3 italic uppercase tracking-widest">
-                          Tidak ada data presensi untuk bulan ini
-                       </p>
+                      <p className="text-[13px] font-medium text-ink-3 italic uppercase tracking-widest">
+                        Tidak ada data presensi untuk bulan ini
+                      </p>
                     </td>
                   </tr>
                 )}
@@ -211,30 +211,30 @@ export default function PresensiPage() {
 
       {/* Legend & Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
-         <div className="bg-surface border border-border rounded-[32px] p-8 shadow-card flex flex-wrap gap-8 items-center">
-            <h4 className="text-[11px] font-black text-ink-3 uppercase tracking-[0.2em] w-full mb-2">Keterangan:</h4>
-            {Object.entries(statusCfg).map(([full, cfg]) => (
-              <div key={cfg.label} className="flex items-center gap-3">
-                 <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black border", cfg.bg, cfg.border)} style={{ color: cfg.c }}>
-                    {cfg.label}
-                 </div>
-                 <span className="text-[12px] font-bold text-ink uppercase tracking-wider">{cfg.label} = {full}</span>
+        <div className="bg-surface border border-border rounded-[32px] p-8 shadow-card flex flex-wrap gap-8 items-center">
+          <h4 className="text-[11px] font-black text-ink-3 uppercase tracking-[0.2em] w-full mb-2">Keterangan:</h4>
+          {Object.entries(statusCfg).map(([full, cfg]) => (
+            <div key={cfg.label} className="flex items-center gap-3">
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-black border", cfg.bg, cfg.border)} style={{ color: cfg.c }}>
+                {cfg.label}
               </div>
-            ))}
-         </div>
+              <span className="text-[12px] font-bold text-ink uppercase tracking-wider">{cfg.label} = {full}</span>
+            </div>
+          ))}
+        </div>
 
-         <div className="bg-indigo border border-indigo-border rounded-[32px] p-8 flex items-center gap-6 shadow-xl shadow-indigo/20">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white shrink-0">
-               <FileText size={32} />
-            </div>
-            <div>
-               <p className="text-[11px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">Status Kehadiran</p>
-               <h3 className="text-2xl font-black text-white uppercase tracking-tight">
-                  {attendanceRate >= 90 ? "Sangat Baik" : attendanceRate >= 75 ? "Cukup Baik" : "Perlu Perhatian"}
-               </h3>
-               <p className="text-[12px] font-medium text-white/70 mt-1">Estimasi persentase kehadiran Anda: {attendanceRate}%</p>
-            </div>
-         </div>
+        <div className="bg-indigo border border-indigo-border rounded-[32px] p-8 flex items-center gap-6 shadow-xl shadow-indigo/20">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white shrink-0">
+            <FileText size={32} />
+          </div>
+          <div>
+            <p className="text-[11px] font-black text-white/50 uppercase tracking-[0.2em] mb-1">Status Kehadiran</p>
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight">
+              {attendanceRate >= 90 ? "Sangat Baik" : attendanceRate >= 75 ? "Cukup Baik" : "Perlu Perhatian"}
+            </h3>
+            <p className="text-[12px] font-medium text-white/70 mt-1">Estimasi persentase kehadiran Anda: {attendanceRate}%</p>
+          </div>
+        </div>
       </div>
 
       <style jsx>{`

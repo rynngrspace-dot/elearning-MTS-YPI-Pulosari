@@ -233,7 +233,7 @@ export default function KelasClient({ initialKelas, teachers }) {
       <div className="p-6 md:p-12 flex flex-col gap-10 animate-slideUp">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
            <div className="flex items-center gap-6">
-              <div className="w-14 h-14 rounded-3xl bg-indigo border border-indigo-border flex items-center justify-center text-white shadow-xl shadow-indigo/20">
+              <div className="w-14 h-14 rounded-2xl bg-indigo border border-indigo-border flex items-center justify-center text-white">
                  <School size={28} />
               </div>
               <div>
@@ -247,13 +247,13 @@ export default function KelasClient({ initialKelas, teachers }) {
            <div className="flex items-center gap-3">
               <button 
                 onClick={() => setIsShuffleModalOpen(true)}
-                className="flex items-center gap-3 px-8 py-4 bg-indigo/5 border border-indigo/20 text-indigo rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:bg-indigo hover:text-white transition-all shadow-sm group"
+                className="flex items-center gap-3 px-8 py-4 bg-indigo/5 border border-indigo/20 text-indigo rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-indigo hover:text-white transition-all group"
               >
                 <Shuffle className="group-hover:rotate-180 transition-transform duration-500" size={18} strokeWidth={3} /> Acak Siswa Baru
               </button>
               <button 
                 onClick={() => { setEditingKelas(null); setIsModalOpen(true); }}
-                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-[32px] text-[11px] font-black uppercase tracking-widest hover:shadow-2xl hover:shadow-indigo/30 transition-all border border-white/10 cursor-pointer group"
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-indigo to-indigo-hover text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-white/10 cursor-pointer group"
               >
                 <Plus className="group-hover:rotate-90 transition-transform" size={18} strokeWidth={3} /> Tambah Kelas Baru
               </button>
@@ -268,7 +268,7 @@ export default function KelasClient({ initialKelas, teachers }) {
                 placeholder="CARI NAMA KELAS..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                className="w-full pl-14 pr-7 py-4 bg-surface border border-border rounded-2xl text-xs font-bold uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
               />
             </div>
 
@@ -276,8 +276,8 @@ export default function KelasClient({ initialKelas, teachers }) {
                <button 
                 onClick={() => setViewMode("grid")}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                  viewMode === "grid" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "text-ink-3 hover:text-ink"
+                  "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === "grid" ? "bg-indigo text-white" : "text-ink-3 hover:text-ink"
                 )}
                >
                  <LayoutGrid size={16} /> Grid
@@ -285,8 +285,8 @@ export default function KelasClient({ initialKelas, teachers }) {
                <button 
                 onClick={() => setViewMode("table")}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                  viewMode === "table" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "text-ink-3 hover:text-ink"
+                  "flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  viewMode === "table" ? "bg-indigo text-white" : "text-ink-3 hover:text-ink"
                 )}
                >
                  <List size={16} /> Tabel
@@ -298,23 +298,23 @@ export default function KelasClient({ initialKelas, teachers }) {
         {viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredData.map((k) => (
-              <div key={k.id} className="bg-surface border border-border rounded-[40px] p-8 shadow-card hover:shadow-2xl hover:shadow-indigo-500/5 transition-all group relative overflow-hidden">
-                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+              <div key={k.id} className="bg-surface border border-border rounded-[40px] p-8 shadow-card hover:shadow-2xl hover:shadow-indigo/5 transition-all group relative overflow-hidden">
+                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
                  
                  <div className="flex justify-between items-start mb-6">
-                    <div className="w-14 h-14 rounded-[22px] bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-inner group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo group-hover:bg-indigo group-hover:text-white transition-all duration-300">
                        <School size={28} strokeWidth={2} />
                     </div>
                     <div className="flex gap-2.5 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
-                        <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 backdrop-blur-sm transition-all cursor-pointer shadow-lg"><Eye size={18} /></Link>
-                        <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 backdrop-blur-sm transition-all cursor-pointer shadow-lg"><Edit size={18} /></button>
-                        <button onClick={() => openDeleteConfirm(k.id)} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-red-500 hover:border-red-100 backdrop-blur-sm transition-all cursor-pointer shadow-lg"><Trash2 size={18} /></button>
+                        <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-indigo hover:border-indigo/20 backdrop-blur-sm transition-all cursor-pointer"><Eye size={18} /></Link>
+                        <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-indigo hover:border-indigo/20 backdrop-blur-sm transition-all cursor-pointer"><Edit size={18} /></button>
+                        <button onClick={() => openDeleteConfirm(k.id)} className="w-11 h-11 flex items-center justify-center bg-white/90 border border-border rounded-2xl text-ink-3 hover:text-red-500 hover:border-red-100 backdrop-blur-sm transition-all cursor-pointer"><Trash2 size={18} /></button>
                      </div>
                  </div>
 
                  <div>
                     <h3 className="text-2xl font-black text-ink tracking-tight uppercase leading-none mb-2">{k.nama}</h3>
-                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6">Tingkat {k.tingkat}</p>
+                    <p className="text-[10px] font-black text-indigo uppercase tracking-[0.2em] mb-6">Tingkat {k.tingkat}</p>
                  </div>
 
                  <div className="space-y-4">
@@ -328,8 +328,8 @@ export default function KelasClient({ initialKelas, teachers }) {
 
                     <div className="flex flex-col gap-2 p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100/50">
                        <div className="flex items-center gap-3">
-                          <GraduationCap size={16} className="text-indigo-600/60" />
-                          <span className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest leading-none">Wali Kelas</span>
+                          <GraduationCap size={16} className="text-indigo/60" />
+                          <span className="text-[10px] font-black text-indigo/60 uppercase tracking-widest leading-none">Wali Kelas</span>
                        </div>
                        <p className="text-[13px] font-black text-ink uppercase tracking-tight truncate">{k.waliKelas?.user.name || "Belum Ditentukan"}</p>
                     </div>
@@ -375,15 +375,10 @@ export default function KelasClient({ initialKelas, teachers }) {
                           />
                       </td>
                       <td className="px-8 py-5">
-                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
-                               <School size={18} />
-                            </div>
-                            <span className="text-[13px] font-black text-ink uppercase tracking-tight">{k.nama}</span>
-                         </div>
+                         <span className="text-[13px] font-black text-ink uppercase tracking-tight">{k.nama}</span>
                       </td>
                       <td className="px-8 py-5">
-                        <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg border border-indigo-100 uppercase tracking-widest">Kelas {k.tingkat}</span>
+                        <span className="px-3 py-1 bg-indigo-50 text-indigo text-[10px] font-black rounded-lg border border-indigo-100 uppercase tracking-widest">Kelas {k.tingkat}</span>
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2 text-[11px] font-bold text-ink-2 truncate max-w-[200px]">
@@ -392,15 +387,15 @@ export default function KelasClient({ initialKelas, teachers }) {
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2 font-black text-ink text-sm">
-                           <Users size={14} className="text-indigo-500" />
+                           <Users size={14} className="text-indigo" />
                            {k._count.students}
                         </div>
                       </td>
                         <td className="px-7 py-4 text-right">
                            <div className="flex items-center justify-end gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                              <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 transition-all cursor-pointer shadow-sm"><Eye size={16} /></Link>
-                              <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-indigo-500 hover:border-indigo-200 transition-all cursor-pointer shadow-sm"><Edit size={16} /></button>
-                              <button onClick={() => openDeleteConfirm(k.id)} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-xl text-ink-3 hover:text-red-500 hover:border-red-100 transition-all cursor-pointer shadow-sm"><Trash2 size={16} /></button>
+                              <Link href={`/dashboard/admin/kelas/${k.id}`} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-2xl text-ink-3 hover:text-indigo hover:border-indigo/20 transition-all cursor-pointer"><Eye size={16} /></Link>
+                              <button onClick={() => { setEditingKelas(k); setIsModalOpen(true); }} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-2xl text-ink-3 hover:text-indigo hover:border-indigo/20 transition-all cursor-pointer"><Edit size={16} /></button>
+                              <button onClick={() => openDeleteConfirm(k.id)} className="w-10 h-10 flex items-center justify-center bg-white border border-border rounded-2xl text-ink-3 hover:text-red-500 hover:border-red-100 transition-all cursor-pointer"><Trash2 size={16} /></button>
                            </div>
                         </td>
                     </tr>
@@ -422,7 +417,7 @@ export default function KelasClient({ initialKelas, teachers }) {
       {/* FLOATING ACTION BAR FOR BULK DELETE */}
       {selectedKelasIds.length > 0 && (
          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[101] animate-slideUp">
-            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] shadow-2xl border border-white/10 backdrop-blur-xl">
+            <div className="flex items-center gap-8 px-10 py-5 bg-ink text-white rounded-[32px] border border-white/10 backdrop-blur-xl">
                <div className="flex flex-col">
                   <span className="text-[13px] font-black tracking-tight">{selectedKelasIds.length} Rombel Terpilih</span>
                   <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Aksi Massal Tersedia</p>
@@ -431,14 +426,14 @@ export default function KelasClient({ initialKelas, teachers }) {
                <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setSelectedKelasIds([])}
-                    className="px-6 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                    className="px-6 py-2.5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
                   >
                     Batal
                   </button>
                   <button 
                     onClick={handleBulkDelete}
                     disabled={isDeleting}
-                    className="px-8 py-2.5 bg-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                    className="px-8 py-2.5 bg-red-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all flex items-center gap-2"
                   >
                     {isDeleting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={14} />}
                     Hapus Permanen
@@ -455,7 +450,7 @@ export default function KelasClient({ initialKelas, teachers }) {
           <div className="relative bg-surface w-full max-w-md rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
             <div className="p-10 border-b border-border bg-indigo-50/30 flex items-center justify-between">
                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-[22px] bg-indigo-500/10 flex items-center justify-center text-indigo-600 border border-indigo-500/5 shadow-inner">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo/10 flex items-center justify-center text-indigo border border-indigo/5">
                      <Plus size={24} strokeWidth={3} />
                   </div>
                   <div>
@@ -469,7 +464,7 @@ export default function KelasClient({ initialKelas, teachers }) {
             <form onSubmit={handleSave} className="p-10 flex flex-col gap-6">
                <div className="flex flex-col gap-2.5">
                   <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Nama Lengkap Kelas</label>
-                  <input type="text" name="nama" defaultValue={editingKelas?.nama} placeholder="CONTOH: X RPL 1" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black uppercase tracking-tight focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all", formErrors.nama ? "border-red-500 bg-red-50/10" : "border-border")} />
+                  <input type="text" name="nama" defaultValue={editingKelas?.nama} placeholder="CONTOH: X RPL 1" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black uppercase tracking-tight focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all", formErrors.nama ? "border-red-500 bg-red-50/10" : "border-border")} />
                   {formErrors.nama && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.nama}</p>}
                </div>
 
@@ -490,7 +485,7 @@ export default function KelasClient({ initialKelas, teachers }) {
                   </select>
                </div>
 
-               <button type="submit" className="w-full mt-4 py-4.5 bg-indigo-500 text-white rounded-3xl text-[11px] font-black shadow-xl shadow-indigo-500/20 hover:bg-indigo-600 transition-all uppercase tracking-widest border border-white/10">Simpan Kelas</button>
+               <button type="submit" className="w-full mt-4 py-4.5 bg-indigo text-white rounded-2xl text-[11px] font-black hover:bg-indigo-hover transition-all uppercase tracking-widest border border-white/10">Simpan Kelas</button>
             </form>
           </div>
         </div>
@@ -518,7 +513,7 @@ export default function KelasClient({ initialKelas, teachers }) {
           <div className="relative bg-surface w-full max-w-lg rounded-[48px] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-slideUp">
              <div className="p-8 border-b border-border bg-indigo-50/30 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-2xl bg-indigo text-white flex items-center justify-center shadow-lg shadow-indigo/20">
+                   <div className="w-12 h-12 rounded-2xl bg-indigo text-white flex items-center justify-center">
                       <Shuffle size={20} strokeWidth={2.5} />
                    </div>
                    <div>
@@ -552,7 +547,7 @@ export default function KelasClient({ initialKelas, teachers }) {
                           className={cn(
                             "flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all text-left",
                             selectedClassesForShuffle.includes(k.id) 
-                              ? "bg-indigo border-indigo text-white shadow-lg shadow-indigo/20" 
+                              ? "bg-indigo border-indigo text-white" 
                               : "bg-cream/20 border-border text-ink-3 hover:border-indigo/30"
                           )}
                         >
@@ -572,7 +567,7 @@ export default function KelasClient({ initialKelas, teachers }) {
                    <button 
                      onClick={handleShuffle}
                      disabled={isShuffling || selectedClassesForShuffle.length === 0}
-                     className="w-full py-4.5 bg-indigo text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-indigo/20 hover:bg-indigo-hover transition-all disabled:opacity-30 flex items-center justify-center gap-3 active:scale-95"
+                     className="w-full py-4.5 bg-indigo text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-indigo-hover transition-all disabled:opacity-30 flex items-center justify-center gap-3 active:scale-95"
                    >
                      {isShuffling ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Shuffle size={16} strokeWidth={3} />}
                      {isShuffling ? "SEDANG MENGACAK..." : `ACAK KE ${selectedClassesForShuffle.length} KELAS`}

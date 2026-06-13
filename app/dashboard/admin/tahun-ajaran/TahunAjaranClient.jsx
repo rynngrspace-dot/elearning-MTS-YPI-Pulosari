@@ -76,7 +76,7 @@ export default function TahunAjaranClient({ initialData }) {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-all shadow-sm"
+          className="flex items-center gap-2 bg-indigo hover:bg-indigo-hover text-white px-5 py-2.5 rounded-2xl transition-all"
         >
           <Plus size={20} />
           Tambah Tahun Ajaran
@@ -158,7 +158,7 @@ export default function TahunAjaranClient({ initialData }) {
                 <input
                   type="text"
                   placeholder="Contoh: 2023/2024"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                   value={formData.tahun}
                   onChange={(e) => setFormData({ ...formData, tahun: e.target.value })}
                   required
@@ -167,7 +167,7 @@ export default function TahunAjaranClient({ initialData }) {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Semester</label>
                 <select
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                   value={formData.semester}
                   onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
                 >
@@ -179,14 +179,14 @@ export default function TahunAjaranClient({ initialData }) {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all font-medium"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 transition-all font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all font-medium flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 bg-indigo text-white rounded-2xl hover:bg-indigo-hover transition-all font-medium flex items-center justify-center gap-2"
                 >
                   {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Simpan"}
                 </button>
@@ -197,7 +197,7 @@ export default function TahunAjaranClient({ initialData }) {
       )}
 
       {isLoading && (
-        <div className="fixed bottom-8 right-8 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm animate-bounce">
+        <div className="fixed bottom-8 right-8 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-2 text-sm animate-bounce">
           <Loader2 className="animate-spin" size={16} />
           Memproses data...
         </div>

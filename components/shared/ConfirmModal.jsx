@@ -55,7 +55,7 @@ export default function ConfirmModal({
            <button 
              onClick={onConfirm}
              disabled={isLoading}
-             className={`flex-1 py-4 px-6 ${variant === 'destructive' ? 'bg-red-500 shadow-red-500/20' : 'bg-indigo shadow-indigo/20'} text-white rounded-2xl text-[11px] font-black shadow-xl hover:opacity-90 transition-all uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50`}
+             className={`flex-1 py-4 px-6 ${variant === 'destructive' ? 'bg-red-500' : 'bg-indigo'} text-white rounded-2xl text-[11px] font-black hover:opacity-90 transition-all uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50`}
            >
              {isLoading ? <Loader2 size={16} className="animate-spin" /> : confirmText}
            </button>
