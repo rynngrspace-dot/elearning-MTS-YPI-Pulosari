@@ -200,16 +200,18 @@ export default function GuruClient({ initialTeachers, mapelList }) {
     if (currentStep === 1) {
       const nama = document.querySelector('input[name="nama"]')?.value;
       const nip = document.querySelector('input[name="nip"]')?.value;
+      const password = document.querySelector('input[name="password"]')?.value;
 
       let errors = {};
       if (!nama) errors.nama = "Nama lengkap wajib diisi";
       if (!nip) errors.nip = "NIP atau identitas wajib diisi";
+      if (!editingTeacher && !password) errors.password = "Password wajib diisi";
 
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         toast({
           title: "Data Belum Lengkap",
-          description: "Mohon lengkapi kolom Nama dan NIP.",
+          description: "Mohon lengkapi seluruh kolom wajib.",
           variant: "destructive",
         });
         return;
@@ -577,6 +579,13 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                     </select>
                   </div>
                 </div>
+                {!editingTeacher && (
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Password Akun</label>
+                    <input type="password" name="password" placeholder="MASUKKAN PASSWORD KUSTOM GURU" className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black outline-none", formErrors.password ? "border-red-500 bg-red-50/10" : "border-border")} />
+                    {formErrors.password && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.password}</p>}
+                  </div>
+                )}
               </div>
 
               {/* STEP 2: DETAILS */}

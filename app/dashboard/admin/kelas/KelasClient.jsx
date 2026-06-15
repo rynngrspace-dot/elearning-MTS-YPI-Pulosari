@@ -470,10 +470,10 @@ export default function KelasClient({ initialKelas, teachers }) {
 
                <div className="flex flex-col gap-2.5">
                   <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Tingkat Pendidikan</label>
-                  <select name="tingkat" defaultValue={editingKelas?.tingkat || "X"} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none cursor-pointer">
-                     <option value="X">TINGKAT X (SEPULUH)</option>
-                     <option value="XI">TINGKAT XI (SEBELAS)</option>
-                     <option value="XII">TINGKAT XII (DUA BELAS)</option>
+                  <select name="tingkat" defaultValue={editingKelas?.tingkat || "7"} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none cursor-pointer">
+                     <option value="7">TINGKAT 7 (TUJUH)</option>
+                     <option value="8">TINGKAT 8 (DELAPAN)</option>
+                     <option value="9">TINGKAT 9 (SEMBILAN)</option>
                   </select>
                </div>
 
