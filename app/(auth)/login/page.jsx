@@ -109,7 +109,7 @@ export default function LoginPage() {
               <div className="space-y-4">
                 <div className="group/input relative">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1 group-focus-within/input:text-slate-900 transition-colors">
-                    Username / NISN
+                    Username / NISN / NIP
                   </label>
                   <div className="relative">
                     <User
