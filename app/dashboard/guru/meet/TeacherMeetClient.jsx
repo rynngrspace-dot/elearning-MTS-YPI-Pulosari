@@ -14,10 +14,10 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
     const id = asg.id;
     setLoading(p => ({ ...p, [id]: true }));
 
-    // Generate room name: elearningjamil-[mapel]-[kelas]-[timestamp]
+    // Generate room name: mts-pulosari-[mapel]-[kelas]-[timestamp]
     const cleanMapel = asg.mapel.nama.replace(/\s+/g, '-').toLowerCase();
     const cleanKelas = asg.kelas.nama.replace(/\s+/g, '-').toLowerCase();
-    const roomName = `elearningjamil-${cleanMapel}-${cleanKelas}-${Date.now()}`;
+    const roomName = `mts-pulosari-${cleanMapel}-${cleanKelas}-${Date.now()}`;
 
     const res = await createMeetingAction(asg.id, roomName);
     

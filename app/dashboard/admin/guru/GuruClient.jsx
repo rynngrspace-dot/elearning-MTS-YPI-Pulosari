@@ -42,9 +42,23 @@ const badge = (status) => {
       </span>
     );
   }
-  if (s === "GTT") {
+  if (s === "NON PNS" || s === "NON-PNS" || s === "GTT") {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/60">
+        {status}
+      </span>
+    );
+  }
+  if (s === "INPASSING" || s === "INFANSING") {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60">
+        {status}
+      </span>
+    );
+  }
+  if (s === "SERTIFIKASI") {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200/60">
         {status}
       </span>
     );
@@ -593,10 +607,11 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                 <div className="grid grid-cols-2 gap-5">
                   <div className="flex flex-col gap-2.5">
                     <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">Status Guru</label>
-                    <select name="status" defaultValue={editingTeacher?.status || "GTT"} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none">
-                      <option value="PNS">ASN / PNS</option>
-                      <option value="GTT">GURU TETAP (GTT)</option>
-                      <option value="Honor">TENAGA HONORER</option>
+                    <select name="status" defaultValue={editingTeacher?.status || "PNS"} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none">
+                      <option value="PNS">PNS</option>
+                      <option value="Non PNS">NON PNS</option>
+                      <option value="Inpassing">INPASSING</option>
+                      <option value="Sertifikasi">SERTIFIKASI</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-2.5">
