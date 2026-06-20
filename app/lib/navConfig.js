@@ -47,6 +47,7 @@ export const navConfig = {
       children: [
         { label: "Kelola Siswa", href: "/dashboard/admin/siswa" },
         { label: "Kelola Guru", href: "/dashboard/admin/guru" },
+        { label: "Kelola Admin", href: "/dashboard/admin/admin" },
       ],
     },
     { icon: School, label: "Data Kelas", href: "/dashboard/admin/kelas" },
@@ -81,6 +82,7 @@ export const pageTitles = {
   // admin
   "/dashboard/admin/siswa":      "Kelola Data Siswa",
   "/dashboard/admin/guru":       "Kelola Data Guru",
+  "/dashboard/admin/admin":      "Kelola Data Admin",
   "/dashboard/admin/kelas":      "Kelola Data Kelas",
   "/dashboard/admin/tahun-ajaran": "Kelola Tahun Ajaran",
   "/dashboard/admin/pengampu":   "Data Pengampu",

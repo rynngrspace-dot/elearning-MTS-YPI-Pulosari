@@ -49,7 +49,7 @@ const badge = (status) => {
       </span>
     );
   }
-  if (s === "INPASSING" || s === "INFANSING") {
+  if (s === "INFASING" || s === "INFANSING" || s === "INPASSING") {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60">
         {status}
@@ -59,6 +59,13 @@ const badge = (status) => {
   if (s === "SERTIFIKASI") {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200/60">
+        {status}
+      </span>
+    );
+  }
+  if (s === "ADMIN") {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200/60">
         {status}
       </span>
     );
@@ -610,8 +617,9 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                     <select name="status" defaultValue={editingTeacher?.status || "PNS"} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none">
                       <option value="PNS">PNS</option>
                       <option value="Non PNS">NON PNS</option>
-                      <option value="Inpassing">INPASSING</option>
+                      <option value="Infasing">INFASING</option>
                       <option value="Sertifikasi">SERTIFIKASI</option>
+                      <option value="Admin">ADMIN</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-2.5">
