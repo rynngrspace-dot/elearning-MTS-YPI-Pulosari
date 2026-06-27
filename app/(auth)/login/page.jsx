@@ -59,7 +59,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tighter leading-tight">
             Log in <br />
-            <span className="text-[#00A651] ">E-Learning</span>
+            <span className="text-[#00a651] ">E-Learning</span>
           </h1>
           <p className="text-slate-500 text-base sm:text-lg md:text-xl font-medium max-w-md leading-relaxed">
             Selamat Datang kembali, silahkan login ke akun Anda untuk
