@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Video, Plus, ExternalLink, Power, Users, School, Loader2, CalendarClock } from "lucide-react";
 import { createMeetingAction, endMeetingAction } from "@/lib/actions/meet-actions";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function TeacherMeetClient({ initialAssignments, teacherId, userName }) {
+  const router = useRouter();
   const [loading, setLoading] = useState({});
   const [assignments, setAssignments] = useState(initialAssignments);
 
@@ -33,9 +35,12 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
         a.id === id ? { ...a, meetings: [res.data] } : a
       ));
 
-      // Open Jitsi In New Tab with Auto-Login Params
-      const jitsiUrl = `https://meet.jit.si/${roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${userName || "Guru"}"`;
+      // Open Jitsi in a new tab immediately
+      const jitsiUrl = `https://meet.jit.si/${res.data.roomName}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(userName || "Guru")}"`;
       window.open(jitsiUrl, "_blank");
+
+      // Redirect to embedded room
+      router.push(`/dashboard/guru/meet/room/${res.data.id}`);
     } else {
       toast({
         title: "Gagal",
@@ -45,6 +50,7 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
     }
     setLoading(p => ({ ...p, [id]: false }));
   };
+
 
   const handleEndMeeting = async (asg) => {
     const meeting = asg.meetings[0];
@@ -146,9 +152,9 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
                     <>
                       <button
                         onClick={() => {
-                          const encodedName = encodeURIComponent(userName || "Guru");
-                          const jitsiUrl = `https://meet.jit.si/${activeMeeting.roomName}#config.prejoinPageEnabled=false&userInfo.displayName="${encodedName}"`;
+                          const jitsiUrl = `https://meet.jit.si/${activeMeeting.roomName}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(userName || "Guru")}"`;
                           window.open(jitsiUrl, "_blank");
+                          router.push(`/dashboard/guru/meet/room/${activeMeeting.id}`);
                         }}
                         className="w-full py-3 bg-green-500 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-green-600 transition shadow-sm cursor-pointer"
                       >

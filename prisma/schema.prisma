@@ -55,6 +55,7 @@ model Student {
 
   tugasSubmissions TugasSubmission[]
   absensi          Absensi[]
+  meetAttendances  MeetAttendance[]
 }
 
 model Teacher {
@@ -262,6 +263,25 @@ model Meeting {
   startedAt    DateTime @default(now())
   endedAt      DateTime?
   
+  attendances  MeetAttendance[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model MeetAttendance {
+  id         String   @id @default(cuid())
+  meetingId  String
+  meeting    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  firstSeen  DateTime @default(now())
+  lastSeen   DateTime @default(now())
+  duration   Int      @default(0) // total active duration in seconds
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([meetingId, studentId])
+}
+
