@@ -21,8 +21,8 @@ async function seedMapel(prisma) {
     { nama: "Sejarah Kebudayaan Islam", kode: "SKI", kategori: "agama" },
     { nama: "Bahasa Arab", kode: "BARAB", kategori: "agama" },
 
-    // Kejuruan
-    { nama: "Koding dan Kecerdasan Artifisial", kode: "AI-KODE", kategori: "kejuruan" },
+    // Kejuruan -> moved to umum
+    { nama: "Koding dan Kecerdasan Artifisial", kode: "AI-KODE", kategori: "umum" },
   ];
 
   for (const item of mapels) {

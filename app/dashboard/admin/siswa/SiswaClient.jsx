@@ -257,44 +257,77 @@ export default function SiswaClient({ initialStudents, kelasList }) {
     setFormErrors({});
     // Manual Validation per Step (Siswa)
     if (currentStep === 1) {
-      const nama = document.querySelector('input[name="nama"]')?.value;
-      const tempat = document.querySelector('input[name="tempatLahir"]')?.value;
+      const nama = document.querySelector('input[name="nama"]')?.value?.trim();
+      const tempat = document.querySelector('input[name="tempatLahir"]')?.value?.trim();
       const tgl = document.querySelector('input[name="tanggalLahir"]')?.value;
+      const nik = document.querySelector('input[name="nik"]')?.value?.trim();
 
       let errors = {};
-      if (!nama) errors.nama = "Nama lengkap wajib diisi";
+      if (!nama) {
+        errors.nama = "Nama lengkap wajib diisi";
+      } else if (nama.length < 3) {
+        errors.nama = "Nama lengkap minimal 3 karakter";
+      }
       if (!tempat) errors.tempatLahir = "Tempat lahir wajib diisi";
       if (!tgl) errors.tanggalLahir = "Tanggal lahir wajib diisi";
+      if (nik) {
+        if (!/^\d+$/.test(nik)) {
+          errors.nik = "NIK harus berupa angka saja";
+        } else if (nik.length !== 16) {
+          errors.nik = "NIK harus tepat 16 digit";
+        }
+      }
 
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         toast({
-          title: "Data Belum Lengkap",
-          description: "Mohon lengkapi seluruh kolom yang wajib diisi.",
+          title: "Kesalahan Validasi",
+          description: "Mohon lengkapi seluruh kolom wajib dengan benar.",
           variant: "destructive",
         });
         return;
       }
     }
     if (currentStep === 2) {
-      const nisn = document.querySelector('input[name="nisn"]')?.value;
+      const nisn = document.querySelector('input[name="nisn"]')?.value?.trim();
+      const nis = document.querySelector('input[name="nis"]')?.value?.trim();
+      const tahunMasuk = document.querySelector('input[name="tahunMasuk"]')?.value?.trim();
+
+      let errors = {};
+
       if (!nisn) {
-        setFormErrors({ nisn: "NISN Nasional wajib diisi untuk akun siswa" });
-        toast({
-          title: "NISN Diperlukan",
-          description: "NISN digunakan sebagai identitas utama siswa.",
-          variant: "destructive",
-        });
-        return;
+        errors.nisn = "NISN Nasional wajib diisi untuk akun siswa";
+      } else if (!/^\d+$/.test(nisn)) {
+        errors.nisn = "NISN harus berupa angka saja";
+      } else if (nisn.length !== 10) {
+        errors.nisn = "NISN harus tepat 10 digit";
+      }
+
+      if (nis) {
+        if (!/^\d+$/.test(nis)) {
+          errors.nis = "NIS harus berupa angka saja";
+        }
+      }
+
+      if (tahunMasuk) {
+        if (!/^\d+$/.test(tahunMasuk)) {
+          errors.tahunMasuk = "Tahun angkatan harus berupa angka saja";
+        } else if (tahunMasuk.length !== 4) {
+          errors.tahunMasuk = "Tahun angkatan harus berupa 4 digit tahun (contoh: 2024)";
+        }
       }
 
       // Check uniqueness (client-side)
       const isDuplicate = students.some(s => s.nisn === nisn && s.id !== editingSiswa?.id);
       if (isDuplicate) {
-        setFormErrors({ nisn: "NISN sudah terdaftar di sistem" });
+        errors.nisn = "NISN sudah terdaftar di sistem";
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
         toast({
-          title: "NISN Duplikat",
-          description: "Siswa dengan NISN ini sudah ada dalam database.",
+          title: "Kesalahan Validasi",
+          description: "Mohon lengkapi data akademik dengan benar.",
           variant: "destructive",
         });
         return;
@@ -305,22 +338,63 @@ export default function SiswaClient({ initialStudents, kelasList }) {
   };
 
   const finalCheck = () => {
-    const nama = document.querySelector('input[name="nama"]')?.value;
-    const nisn = document.querySelector('input[name="nisn"]')?.value;
-    if (!nama || !nisn) {
-      toast({
-        title: "Kesalahan Validasi",
-        description: "Nama atau NISN masih ada yang kosong. Periksa kembali langkah 1 & 2.",
-        variant: "destructive",
-      });
-      return false;
+    const nama = document.querySelector('input[name="nama"]')?.value?.trim();
+    const nisn = document.querySelector('input[name="nisn"]')?.value?.trim();
+    const nik = document.querySelector('input[name="nik"]')?.value?.trim();
+    const noHpOrangTua = document.querySelector('input[name="noHpOrangTua"]')?.value?.trim();
+    const nis = document.querySelector('input[name="nis"]')?.value?.trim();
+    const tahunMasuk = document.querySelector('input[name="tahunMasuk"]')?.value?.trim();
+
+    let errors = {};
+
+    if (!nama || nama.length < 3) {
+      errors.nama = "Nama wajib diisi (minimal 3 karakter)";
+    }
+    if (!nisn) {
+      errors.nisn = "NISN wajib diisi";
+    } else if (!/^\d+$/.test(nisn)) {
+      errors.nisn = "NISN harus berupa angka saja";
+    } else if (nisn.length !== 10) {
+      errors.nisn = "NISN harus tepat 10 digit";
+    }
+    if (nis) {
+      if (!/^\d+$/.test(nis)) {
+        errors.nis = "NIS harus berupa angka saja";
+      }
+    }
+    if (tahunMasuk) {
+      if (!/^\d+$/.test(tahunMasuk)) {
+        errors.tahunMasuk = "Tahun angkatan harus berupa angka saja";
+      } else if (tahunMasuk.length !== 4) {
+        errors.tahunMasuk = "Tahun angkatan harus berupa 4 digit tahun";
+      }
+    }
+    if (nik) {
+      if (!/^\d+$/.test(nik)) {
+        errors.nik = "NIK harus berupa angka saja";
+      } else if (nik.length !== 16) {
+        errors.nik = "NIK harus tepat 16 digit";
+      }
+    }
+    if (noHpOrangTua) {
+      if (!/^\d+$/.test(noHpOrangTua)) {
+        errors.noHpOrangTua = "Nomor WhatsApp harus berupa angka saja";
+      } else if (noHpOrangTua.length < 9 || noHpOrangTua.length > 15) {
+        errors.noHpOrangTua = "Nomor WhatsApp harus 9 s.d. 15 digit";
+      }
     }
 
     const isDuplicate = students.some(s => s.nisn === nisn && s.id !== editingSiswa?.id);
     if (isDuplicate) {
+      errors.nisn = "NISN sudah terdaftar di sistem";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      const firstErrorKey = Object.keys(errors)[0];
       toast({
-        title: "NISN Duplikat",
-        description: "Siswa dengan NISN ini sudah ada dalam database.",
+        title: "Kesalahan Validasi",
+        description: errors[firstErrorKey],
         variant: "destructive",
       });
       return false;
@@ -698,7 +772,8 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                     </div>
                     <div className="flex flex-col gap-2.5">
                       <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest opacity-70">NIK (Kependudukan)</label>
-                      <input type="text" name="nik" defaultValue={editingSiswa?.nik} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[13px] font-mono font-black outline-none" />
+                      <input type="text" name="nik" defaultValue={editingSiswa?.nik} className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-mono font-black outline-none", formErrors.nik ? "border-red-500 bg-red-50/10" : "border-border")} />
+                      {formErrors.nik && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.nik}</p>}
                     </div>
                   </div>
                 </div>
@@ -717,7 +792,8 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                     </div>
                     <div className="flex flex-col gap-2.5">
                       <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest opacity-70">NIS SEKOLAH</label>
-                      <input type="text" name="nis" defaultValue={editingSiswa?.nis} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[13px] font-mono font-black tracking-widest outline-none" />
+                      <input type="text" name="nis" defaultValue={editingSiswa?.nis} className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-mono font-black tracking-widest outline-none", formErrors.nis ? "border-red-500 bg-red-50/10" : "border-border")} />
+                      {formErrors.nis && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.nis}</p>}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-5">
@@ -730,7 +806,8 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                     </div>
                     <div className="flex flex-col gap-2.5">
                       <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest opacity-70">Tahun Angkatan</label>
-                      <input type="text" name="tahunMasuk" defaultValue={editingSiswa?.tahunMasuk || "2024"} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[13px] font-black text-center outline-none" />
+                      <input type="text" name="tahunMasuk" defaultValue={editingSiswa?.tahunMasuk || "2024"} className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black text-center outline-none", formErrors.tahunMasuk ? "border-red-500 bg-red-50/10" : "border-border")} />
+                      {formErrors.tahunMasuk && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.tahunMasuk}</p>}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2.5">
@@ -765,8 +842,9 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                         <Phone size={14} strokeWidth={2.5} />
                         <div className="w-px h-4 bg-ink" />
                       </div>
-                      <input type="text" name="noHpOrangTua" defaultValue={editingSiswa?.noHpOrangTua} placeholder="CONTOH: 08123456789" className="w-full pl-16 pr-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[13px] font-mono font-black tracking-widest outline-none" />
+                      <input type="text" name="noHpOrangTua" defaultValue={editingSiswa?.noHpOrangTua} placeholder="CONTOH: 08123456789" className={cn("w-full pl-16 pr-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-mono font-black tracking-widest outline-none", formErrors.noHpOrangTua ? "border-red-500 bg-red-50/10" : "border-border")} />
                     </div>
+                    {formErrors.noHpOrangTua && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.noHpOrangTua}</p>}
                   </div>
                   <div className="p-6 bg-indigo/5 border border-indigo/10 rounded-[30px] flex gap-4">
                     <div className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center shrink-0">

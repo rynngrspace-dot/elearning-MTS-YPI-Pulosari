@@ -219,20 +219,40 @@ export default function GuruClient({ initialTeachers, mapelList }) {
   const handleNext = () => {
     setFormErrors({});
     if (currentStep === 1) {
-      const nama = document.querySelector('input[name="nama"]')?.value;
-      const nip = document.querySelector('input[name="nip"]')?.value;
+      const nama = document.querySelector('input[name="nama"]')?.value?.trim();
+      const nip = document.querySelector('input[name="nip"]')?.value?.trim();
       const password = document.querySelector('input[name="password"]')?.value;
 
       let errors = {};
-      if (!nama) errors.nama = "Nama lengkap wajib diisi";
-      if (!nip) errors.nip = "NIP atau identitas wajib diisi";
-      if (!editingTeacher && !password) errors.password = "Password wajib diisi";
+      if (!nama) {
+        errors.nama = "Nama lengkap wajib diisi";
+      } else if (nama.length < 3) {
+        errors.nama = "Nama lengkap minimal 3 karakter";
+      }
+
+      if (!nip) {
+        errors.nip = "NIP atau identitas wajib diisi";
+      } else if (!/^\d+$/.test(nip)) {
+        errors.nip = "NIP harus berupa angka saja";
+      } else if (nip.length < 16) {
+        errors.nip = "NIP minimal 16 digit/karakter";
+      }
+
+      if (!editingTeacher) {
+        if (!password) {
+          errors.password = "Password wajib diisi";
+        } else if (password.length < 6) {
+          errors.password = "Password minimal 6 karakter";
+        }
+      } else if (password && password.length < 6) {
+        errors.password = "Password minimal 6 karakter";
+      }
 
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         toast({
-          title: "Data Belum Lengkap",
-          description: "Mohon lengkapi seluruh kolom wajib.",
+          title: "Kesalahan Validasi",
+          description: "Mohon periksa kembali kolom yang diisi.",
           variant: "destructive",
         });
         return;
@@ -242,11 +262,45 @@ export default function GuruClient({ initialTeachers, mapelList }) {
   };
 
   const finalCheck = () => {
-    const nama = document.querySelector('input[name="nama"]')?.value;
-    if (!nama) {
+    const nama = document.querySelector('input[name="nama"]')?.value?.trim();
+    const nip = document.querySelector('input[name="nip"]')?.value?.trim();
+    const password = document.querySelector('input[name="password"]')?.value;
+    const noHp = document.querySelector('input[name="noHp"]')?.value?.trim();
+
+    let errors = {};
+
+    if (!nama || nama.length < 3) {
+      errors.nama = "Nama Guru wajib diisi (minimal 3 karakter)";
+    }
+    if (!nip) {
+      errors.nip = "NIP wajib diisi";
+    } else if (!/^\d+$/.test(nip)) {
+      errors.nip = "NIP harus berupa angka saja";
+    } else if (nip.length < 16) {
+      errors.nip = "NIP wajib diisi (minimal 16 digit)";
+    }
+    if (!editingTeacher) {
+      if (!password || password.length < 6) {
+        errors.password = "Password wajib diisi (minimal 6 karakter)";
+      }
+    } else if (password && password.length < 6) {
+      errors.password = "Password minimal 6 karakter";
+    }
+
+    if (noHp) {
+      if (!/^\d+$/.test(noHp)) {
+        errors.noHp = "No WhatsApp harus berupa angka saja";
+      } else if (noHp.length < 9 || noHp.length > 15) {
+        errors.noHp = "No WhatsApp harus 9 s.d. 15 digit";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      const firstErrorKey = Object.keys(errors)[0];
       toast({
         title: "Kesalahan Validasi",
-        description: "Nama Guru tidak boleh kosong.",
+        description: errors[firstErrorKey],
         variant: "destructive",
       });
       return false;
@@ -624,7 +678,8 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                   </div>
                   <div className="flex flex-col gap-2.5">
                     <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">No WhatsApp</label>
-                    <input type="text" name="noHp" defaultValue={editingTeacher?.noHp} className="px-6 py-4.5 bg-cream/30 border border-border rounded-2xl text-[13px] font-black outline-none" />
+                    <input type="text" name="noHp" defaultValue={editingTeacher?.noHp} className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black outline-none", formErrors.noHp ? "border-red-500 bg-red-50/10" : "border-border")} />
+                    {formErrors.noHp && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.noHp}</p>}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2.5">

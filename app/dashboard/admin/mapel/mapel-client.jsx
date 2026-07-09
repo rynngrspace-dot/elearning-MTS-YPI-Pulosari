@@ -101,14 +101,12 @@ export default function MapelClient({ initialData }) {
   const categories = [
     "Semua Kategori",
     "umum",
-    "agama",
-    "kejuruan"
+    "agama"
   ];
 
   const kategoriColors = {
     "umum": "bg-indigo-100 text-indigo-800 border-indigo-200",
     "agama": "bg-blue-100 text-blue-800 border-blue-200",
-    "kejuruan": "bg-purple-100 text-purple-800 border-purple-200",
   };
 
   // Logic Filtering (FIXED: Separating Search and Category)
@@ -245,7 +243,7 @@ export default function MapelClient({ initialData }) {
               <div>
                  <h1 className="text-3xl font-black text-ink tracking-tight uppercase leading-none">Manajemen Mata Pelajaran</h1>
                   <div className="text-[11px] text-ink-3 font-bold uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
-                     <div className="w-2 h-0.5 bg-indigo/40" /> Kurikulum & Akademik Jamil
+                     <div className="w-2 h-0.5 bg-indigo/40" /> Kurikulum & Akademik
                   </div>
               </div>
            </div>
@@ -502,7 +500,6 @@ export default function MapelClient({ initialData }) {
                   >
                     <option value="umum">Umum</option>
                     <option value="agama">Agama</option>
-                    <option value="kejuruan">Kejuruan</option>
                   </select>
                 </div>
               </div>
