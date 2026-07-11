@@ -37,6 +37,28 @@ const badge = (status) => {
   );
 };
 
+const validateNisn = (nisn, tanggalLahir) => {
+  if (!nisn) return "NISN Nasional wajib diisi untuk akun siswa";
+  if (!/^\d+$/.test(nisn)) {
+    return "NISN harus berupa angka saja";
+  }
+  if (nisn.length !== 10) {
+    return "NISN harus tepat 10 digit";
+  }
+  if (tanggalLahir) {
+    // tanggalLahir format: YYYY-MM-DD
+    const year = tanggalLahir.split("-")[0];
+    if (year && year.length === 4) {
+      const expectedPrefix = year.substring(1); // last 3 digits of YYYY
+      const actualPrefix = nisn.substring(0, 3);
+      if (actualPrefix !== expectedPrefix) {
+        return `3 digit pertama NISN (${actualPrefix}) harus sesuai dengan 3 digit terakhir tahun lahir (${expectedPrefix})`;
+      }
+    }
+  }
+  return null;
+};
+
 export default function SiswaClient({ initialStudents, kelasList }) {
   const [activeTab, setActiveTab] = useState("Semua Siswa");
   const [searchTerm, setSearchTerm] = useState("");
@@ -292,15 +314,13 @@ export default function SiswaClient({ initialStudents, kelasList }) {
       const nisn = document.querySelector('input[name="nisn"]')?.value?.trim();
       const nis = document.querySelector('input[name="nis"]')?.value?.trim();
       const tahunMasuk = document.querySelector('input[name="tahunMasuk"]')?.value?.trim();
+      const tanggalLahir = document.querySelector('input[name="tanggalLahir"]')?.value;
 
       let errors = {};
 
-      if (!nisn) {
-        errors.nisn = "NISN Nasional wajib diisi untuk akun siswa";
-      } else if (!/^\d+$/.test(nisn)) {
-        errors.nisn = "NISN harus berupa angka saja";
-      } else if (nisn.length !== 10) {
-        errors.nisn = "NISN harus tepat 10 digit";
+      const nisnError = validateNisn(nisn, tanggalLahir);
+      if (nisnError) {
+        errors.nisn = nisnError;
       }
 
       if (nis) {
@@ -344,18 +364,16 @@ export default function SiswaClient({ initialStudents, kelasList }) {
     const noHpOrangTua = document.querySelector('input[name="noHpOrangTua"]')?.value?.trim();
     const nis = document.querySelector('input[name="nis"]')?.value?.trim();
     const tahunMasuk = document.querySelector('input[name="tahunMasuk"]')?.value?.trim();
+    const tanggalLahir = document.querySelector('input[name="tanggalLahir"]')?.value;
 
     let errors = {};
 
     if (!nama || nama.length < 3) {
       errors.nama = "Nama wajib diisi (minimal 3 karakter)";
     }
-    if (!nisn) {
-      errors.nisn = "NISN wajib diisi";
-    } else if (!/^\d+$/.test(nisn)) {
-      errors.nisn = "NISN harus berupa angka saja";
-    } else if (nisn.length !== 10) {
-      errors.nisn = "NISN harus tepat 10 digit";
+    const nisnError = validateNisn(nisn, tanggalLahir);
+    if (nisnError) {
+      errors.nisn = nisnError;
     }
     if (nis) {
       if (!/^\d+$/.test(nis)) {

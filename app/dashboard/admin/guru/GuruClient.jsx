@@ -77,6 +77,48 @@ const badge = (status) => {
   );
 };
 
+const validateNip = (nip) => {
+  if (!nip) return "NIP wajib diisi";
+  if (!/^\d+$/.test(nip)) {
+    return "NIP harus berupa angka saja";
+  }
+  if (nip.length !== 18) {
+    return "NIP harus tepat 18 digit angka";
+  }
+
+  // 8 digit pertama (YYYYMMDD)
+  const birthYear = parseInt(nip.substring(0, 4), 10);
+  const birthMonth = parseInt(nip.substring(4, 6), 10);
+  const birthDay = parseInt(nip.substring(6, 8), 10);
+  if (birthYear < 1930 || birthYear > 2026) {
+    return "Tahun lahir pada NIP (4 digit pertama) tidak valid";
+  }
+  if (birthMonth < 1 || birthMonth > 12) {
+    return "Bulan lahir pada NIP (digit 5-6) tidak valid";
+  }
+  if (birthDay < 1 || birthDay > 31) {
+    return "Tanggal lahir pada NIP (digit 7-8) tidak valid";
+  }
+
+  // 6 digit berikutnya (YYYYMM)
+  const appYear = parseInt(nip.substring(8, 12), 10);
+  const appMonth = parseInt(nip.substring(12, 14), 10);
+  if (appYear < 1950 || appYear > 2026) {
+    return "Tahun pengangkatan pada NIP (digit 9-12) tidak valid";
+  }
+  if (appMonth < 1 || appMonth > 12) {
+    return "Bulan pengangkatan pada NIP (digit 13-14) tidak valid";
+  }
+
+  // 1 digit gender (1 = pria, 2 = wanita)
+  const genderDigit = nip.charAt(14);
+  if (genderDigit !== '1' && genderDigit !== '2') {
+    return "Digit jenis kelamin pada NIP (digit ke-15) harus 1 (pria) atau 2 (wanita)";
+  }
+
+  return null;
+};
+
 const formatMapelToList = (mapelString) => {
   if (!mapelString) return ["Umum"];
   const dividers = /\b(?:dan|and|&)\b|[,/]/gi;
@@ -230,12 +272,9 @@ export default function GuruClient({ initialTeachers, mapelList }) {
         errors.nama = "Nama lengkap minimal 3 karakter";
       }
 
-      if (!nip) {
-        errors.nip = "NIP atau identitas wajib diisi";
-      } else if (!/^\d+$/.test(nip)) {
-        errors.nip = "NIP harus berupa angka saja";
-      } else if (nip.length < 16) {
-        errors.nip = "NIP minimal 16 digit/karakter";
+      const nipError = validateNip(nip);
+      if (nipError) {
+        errors.nip = nipError;
       }
 
       if (!editingTeacher) {
@@ -272,12 +311,9 @@ export default function GuruClient({ initialTeachers, mapelList }) {
     if (!nama || nama.length < 3) {
       errors.nama = "Nama Guru wajib diisi (minimal 3 karakter)";
     }
-    if (!nip) {
-      errors.nip = "NIP wajib diisi";
-    } else if (!/^\d+$/.test(nip)) {
-      errors.nip = "NIP harus berupa angka saja";
-    } else if (nip.length < 16) {
-      errors.nip = "NIP wajib diisi (minimal 16 digit)";
+    const nipError = validateNip(nip);
+    if (nipError) {
+      errors.nip = nipError;
     }
     if (!editingTeacher) {
       if (!password || password.length < 6) {
