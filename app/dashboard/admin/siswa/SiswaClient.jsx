@@ -443,10 +443,7 @@ export default function SiswaClient({ initialStudents, kelasList }) {
                 <FileText size={14} strokeWidth={2.5} />
                 Import Excel
               </button>
-              <button className="flex items-center gap-2 px-6 py-3 border border-border rounded-2xl bg-surface text-ink-2 text-xs font-black hover:bg-cream transition-all uppercase tracking-widest">
-                <Download size={14} strokeWidth={2.5} />
-                Export CSV
-              </button>
+             
               <button
                 onClick={() => openModal()}
                 className="flex items-center gap-2 px-6 py-3 bg-indigo text-white rounded-2xl text-[11px] font-black hover:bg-indigo-hover transition-all uppercase tracking-widest border border-white/10"

@@ -19,6 +19,7 @@ import { getStudentTugasPageAction, submitTugasAction } from "@/lib/actions/sisw
 import { getSubjectDetailAction } from "@/lib/actions/pengampu-actions";
 import { toast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 const statusCfg = {
   belum: {
@@ -135,25 +136,52 @@ export default function TugasPage() {
     
     // In a real app we'd upload the file first and get a URL.
     // Here we'll simulate the URL since the backend field expects a string.
-    const fakeFileUrl = file ? `/uploads/submissions/${file.name}` : null;
+   let fileUrl = null;
+
+    if (file) {
+      const ext = file.name.split(".").pop();
+      const filePath = `${user.studentId}/${selected.id}-${Date.now()}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from("tugas")
+        .upload(filePath, file);
+
+      if (error) {
+        toast({
+          title: "Upload gagal",
+          description: error.message,
+          variant: "destructive",
+        });
+
+        setSubmitting(false);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("tugas")
+        .getPublicUrl(filePath);
+
+      fileUrl = data.publicUrl;
+    }
 
     const res = await submitTugasAction({
       tugasId: selected.id,
       studentId: user.studentId,
-      fileUrl: fakeFileUrl
+      fileUrl,
     });
 
     if (res.success) {
-      toast({
-        title: "Berhasil",
-        description: "Tugas berhasil dikumpulkan!",
-        variant: "success"
-      });
-      fetchTugas(); // Refresh data
-      setSelected(null);
-      setFile(null);
-      setCatatan("");
-    } else {
+  toast({
+    title: "Berhasil",
+    description: "Tugas berhasil dikumpulkan!",
+    variant: "success"
+  });
+
+  await fetchData(); // ✅ Refresh the task list
+    setSelected(null);
+    setFile(null);
+    setCatatan("");
+  } else {
       toast({
         title: "Gagal",
         description: res.error || "Gagal mengumpulkan tugas",
