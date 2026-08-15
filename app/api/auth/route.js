@@ -27,7 +27,7 @@ export async function POST(req) {
     // Set session (this helper already handles setting cookies)
     await setSession(user);
 
-    // Prepare redirect path
+    // RBAC Logic
     let targetPath = "/dashboard";
     if (user.role === "ADMIN") {
       targetPath = "/dashboard/admin";

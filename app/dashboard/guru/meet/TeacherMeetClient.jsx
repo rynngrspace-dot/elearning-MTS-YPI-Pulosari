@@ -22,7 +22,7 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
     const roomName = `mts-pulosari-${cleanMapel}-${cleanKelas}-${Date.now()}`;
 
     const res = await createMeetingAction(asg.id, roomName);
-    
+  
     if (res.success) {
       toast({
         title: "Pertemuan Dimulai",
@@ -155,7 +155,7 @@ export default function TeacherMeetClient({ initialAssignments, teacherId, userN
                           const jitsiUrl = `https://meet.jit.si/${activeMeeting.roomName}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(userName || "Guru")}"`;
                           window.open(jitsiUrl, "_blank");
                           router.push(`/dashboard/guru/meet/room/${activeMeeting.id}`);
-                        }}
+                       }}
                         className="w-full py-3 bg-green-500 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-green-600 transition shadow-sm cursor-pointer"
                       >
                         <ExternalLink size={14} /> Masuk Ulang Room

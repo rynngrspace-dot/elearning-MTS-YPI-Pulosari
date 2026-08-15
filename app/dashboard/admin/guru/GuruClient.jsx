@@ -77,46 +77,24 @@ const badge = (status) => {
   );
 };
 
+// VALIDASI NIP DIUBAH: Hapus validasi tanggal, tahun, dan panjang 16 digit
 const validateNip = (nip) => {
-  if (!nip) return "NIP wajib diisi";
-  if (!/^\d+$/.test(nip)) {
+  // Jika NIP kosong, abaikan (opsional)
+  if (!nip || nip.trim() === "") return null;
+
+  const cleanNip = nip.trim();
+
+  // Validasi: Harus berupa angka saja
+  if (!/^\d+$/.test(cleanNip)) {
     return "NIP harus berupa angka saja";
   }
-  if (nip.length !== 18) {
-    return "NIP harus tepat 18 digit angka";
+
+  // Validasi: Maksimal 18 digit
+  if (cleanNip.length > 18) {
+    return "NIP maksimal 18 digit";
   }
 
-  // 8 digit pertama (YYYYMMDD)
-  const birthYear = parseInt(nip.substring(0, 4), 10);
-  const birthMonth = parseInt(nip.substring(4, 6), 10);
-  const birthDay = parseInt(nip.substring(6, 8), 10);
-  if (birthYear < 1930 || birthYear > 2026) {
-    return "Tahun lahir pada NIP (4 digit pertama) tidak valid";
-  }
-  if (birthMonth < 1 || birthMonth > 12) {
-    return "Bulan lahir pada NIP (digit 5-6) tidak valid";
-  }
-  if (birthDay < 1 || birthDay > 31) {
-    return "Tanggal lahir pada NIP (digit 7-8) tidak valid";
-  }
-
-  // 6 digit berikutnya (YYYYMM)
-  const appYear = parseInt(nip.substring(8, 12), 10);
-  const appMonth = parseInt(nip.substring(12, 14), 10);
-  if (appYear < 1950 || appYear > 2026) {
-    return "Tahun pengangkatan pada NIP (digit 9-12) tidak valid";
-  }
-  if (appMonth < 1 || appMonth > 12) {
-    return "Bulan pengangkatan pada NIP (digit 13-14) tidak valid";
-  }
-
-  // 1 digit gender (1 = pria, 2 = wanita)
-  const genderDigit = nip.charAt(14);
-  if (genderDigit !== '1' && genderDigit !== '2') {
-    return "Digit jenis kelamin pada NIP (digit ke-15) harus 1 (pria) atau 2 (wanita)";
-  }
-
-  return null;
+  return null; // Valid
 };
 
 const formatMapelToList = (mapelString) => {
@@ -679,7 +657,7 @@ export default function GuruClient({ initialTeachers, mapelList }) {
                 <div className="grid grid-cols-2 gap-5">
                   <div className="flex flex-col gap-2.5">
                     <label className="text-[10px] font-black text-ink-3 uppercase ml-2 tracking-widest">NIP (Identitas)</label>
-                    <input type="text" name="nip" defaultValue={editingTeacher?.nip} className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black outline-none", formErrors.nip ? "border-red-500 bg-red-50/10" : "border-border")} />
+                    <input type="text" name="nip" defaultValue={editingTeacher?.nip || ""} className={cn("px-6 py-4.5 bg-cream/30 border rounded-2xl text-[13px] font-black outline-none", formErrors.nip ? "border-red-500 bg-red-50/10" : "border-border")} />
                     {formErrors.nip && <p className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2 animate-shake">{formErrors.nip}</p>}
                   </div>
                   <div className="flex flex-col gap-2.5">
