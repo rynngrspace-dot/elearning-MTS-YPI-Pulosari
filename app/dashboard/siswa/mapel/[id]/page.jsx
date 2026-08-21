@@ -58,7 +58,7 @@ export default function SubjectDetailPage() {
   const menuCards = [
     { title: "Materi", icon: FileText, href: `/dashboard/siswa/materi?id=${params.id}` },
     { title: "Tugas", icon: ClipboardList, href: `/dashboard/siswa/tugas?id=${params.id}` },
-    { title: "Jitsi Meet", icon: Video, href: `/dashboard/siswa/meet/${params.id}` },
+    { title: "Jitsi Meet", icon: Video, href: `/dashboard/siswa/meet/` },
   ];
 
   if (loading) return (
