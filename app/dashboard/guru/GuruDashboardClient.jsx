@@ -385,58 +385,7 @@ export default function GuruDashboardClient({ data }) {
             </div>
           </div>
 
-          {/* Pengumuman Placeholder */}
-          <div className="bg-ink text-white rounded-2xl shadow-md p-8 relative overflow-hidden group">
-            <div className="absolute -right-10 -bottom-10 opacity-10 group-hover:scale-110 transition-all duration-700">
-              <AlertCircle size={180} />
-            </div>
-
-            <div className="relative z-10">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="font-black text-lg leading-none mb-1">
-                    📢 Memo Sekolah
-                  </h3>
-                  <p className="text-[9px] font-bold text-white/50 uppercase tracking-[0.2em]">
-                    Pengumuman Terbaru
-                  </p>
-                </div>
-                <Link
-                  href="/dashboard/guru/pengumuman"
-                  className="text-[9px] font-black uppercase tracking-widest bg-white/10 px-4 py-2 rounded-xl hover:bg-white/20 transition-all"
-                >
-                  Lihat Semua
-                </Link>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {[
-                  {
-                    judul: "Jadwal UTS Semester Genap",
-                    tgl: "10 Mar",
-                    target: "Semua Kelas",
-                  },
-                  {
-                    judul: "Pengumpulan Laporan Fisika",
-                    tgl: "8 Mar",
-                    target: "Kelas X-A",
-                  },
-                ].map((p, i) => (
-                  <div
-                    key={i}
-                    className="p-5 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm group-hover:bg-white/10 transition-all"
-                  >
-                    <h4 className="text-sm font-black uppercase tracking-tight mb-1">
-                      {p.judul}
-                    </h4>
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">
-                      {p.target} · {p.tgl}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
 
